@@ -73,8 +73,8 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 			appendStringInfoChar(buf, '.');
 		/* follow next */
 	case fpString:
-		/* appendStringInfoChar(buf, fpGetString(v, NULL)); */
-		escape_json(buf, fpGetString(v, NULL));
+		/* escape_json(buf, fpGetString(v, NULL)); */
+		appendStringInfoString(buf, fpGetString(v, NULL));
 		break;
 	default:
 		elog(ERROR, "Unknown FhirpathItem type: %d", v->type);
