@@ -57,6 +57,7 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 		case fpKey:
 		case fpString:
 			read_int32(v->value.datalen, base, pos);
+			v->value.data = base + pos;
 			break;
 		default:
 			abort();

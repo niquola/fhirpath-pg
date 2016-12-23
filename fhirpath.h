@@ -15,9 +15,6 @@ typedef struct
 #define PG_GETARG_FHIRPATH(x)	DatumGetFhirpathP(PG_GETARG_DATUM(x))
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
 
-
-
-
 typedef enum FhirpathItemType {
 	fpNull,
 	fpKey,

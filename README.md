@@ -21,9 +21,12 @@ bin/initdb -D $PGDATA -E utf8
 vim /tmp/pg/postgresql.conf # check port configure log /tmp/pg.log
 /opt/local/pg/bin/pg_ctl start -D $PGDATA
 
+cd postgres && src/tools/make_etags
 cd postgres/src/contrib
 git clone https://github.com/niquola/fhirpath-pg
 cd fhirpath-pg
+..postgres/src/tools/make_etags .
+
 make && sudo make install \
 && psql test -c "drop extension if exists fhirpath; create extension fhirpath; select 'Patient.name.given'::fhirpath"
 
