@@ -90,6 +90,16 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 	 return head;
  }
+ static FhirpathParseItem*
+	 makeItemKey(string *s)
+ {
+	 FhirpathParseItem *v;
+
+	 v = makeItemString(s);
+	 v->type = fpKey;
+
+	 return v;
+ }
 
 %}
 
@@ -142,7 +152,7 @@ expr:
  * key is always a string, not a bool or numeric
  */
 key:
-	STRING_P						{ $$ = makeItemType(fpNode); }
+    STRING_P						{ $$ = makeItemKey(&$1); }
 	;
 
 /*
