@@ -39,6 +39,7 @@ flattenFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 		appendBinaryStringInfo(buf, (char*)&item->string.len, sizeof(item->string.len));
 		/* write string content */
 		appendBinaryStringInfo(buf, item->string.val, item->string.len);
+		appendStringInfoChar(buf, '\0');
 	case fpNull:
 		elog(INFO, "null");
 		break;
