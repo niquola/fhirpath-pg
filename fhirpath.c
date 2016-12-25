@@ -34,7 +34,7 @@ fhirpath_in(PG_FUNCTION_ARGS)
 		serializeFhirpathParseItem(&buf, fhirpath);
 		res = (Fhirpath*)buf.data;
 
-		elog(INFO, "serialized");
+		/* elog(INFO, "serialized"); */
 		SET_VARSIZE(res, buf.len);
 		PG_RETURN_FHIRPATH(res);
 	} else {
@@ -55,7 +55,7 @@ fhirpath_out(PG_FUNCTION_ARGS)
 	StringInfoData  	buf;
 	FhirpathItem		v;
 
-	elog(INFO, "deserialize");
+	/* elog(INFO, "deserialize"); */
 
 	initStringInfo(&buf);
 	enlargeStringInfo(&buf, VARSIZE(in) /* estimation */);
@@ -64,7 +64,7 @@ fhirpath_out(PG_FUNCTION_ARGS)
 
 	printFhirpathItem(&buf, &v, false);
 
-	elog(INFO, "printed: %s", buf.data);
+	/* elog(INFO, "printed: %s", buf.data); */
 
 
 	PG_RETURN_CSTRING(buf.data);
@@ -91,7 +91,7 @@ void
 	{
 	case fpKey:
 		key = fpGetString(path_item, NULL);
-		elog(INFO, "get key: %s", key);
+		/* elog(INFO, "get key: %s", key); */
 
 		key_v.type = jbvString;
 		key_v.val.string.len = strlen(key);
@@ -99,7 +99,7 @@ void
 		next_v = findJsonbValueFromContainer((JsonbContainer *) jbv->val.binary.data , JB_FOBJECT, &key_v);
 		if(next_v){
 			Jsonb *out = JsonbValueToJsonb(next_v);
-			elog(INFO, "Next: %s", JsonbToCString(NULL, &out->root, 0));
+			/* elog(INFO, "Next: %s", JsonbToCString(NULL, &out->root, 0)); */
 			if(next_v->type == jbvBinary){
 				elog(INFO, "binary");
 			}
@@ -107,7 +107,7 @@ void
 
 		break;
 	default:
-		elog(INFO, "something");
+		elog(ERROR, "TODO extract");
 	}
 
 	if (next_v && fpGetNext(path_item, &next_item)) {
@@ -118,7 +118,7 @@ void
 		  next_it = JsonbIteratorNext(&array_it, &array_value, true);
 
 		  if(next_it == WJB_BEGIN_ARRAY){
-			  elog(INFO, "We are in array");
+			  /* elog(INFO, "We are in array"); */
 			  while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
 				  if(next_it == WJB_ELEM){
 					  recursive_fhirpath_extract(result, &array_value, &next_item);
@@ -126,15 +126,15 @@ void
 			  }
 		  }
 		  else if(next_it == WJB_BEGIN_OBJECT){
-			  elog(INFO, "We are in object");
+			  /* elog(INFO, "We are in object"); */
 			  recursive_fhirpath_extract(result, next_v, &next_item);
 		  }
 		}
 
 	} else if (next_v) {
 		Jsonb *out = JsonbValueToJsonb(next_v);
-		elog(INFO, "Add to result: %s", JsonbToCString(NULL, &out->root, 0));
-		elog(INFO, "Type: %d", next_v->type);
+		/* elog(INFO, "Add to result: %s", JsonbToCString(NULL, &out->root, 0)); */
+		/* elog(INFO, "Type: %d", next_v->type); */
 		result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
 	}
 	return NULL;

@@ -58,7 +58,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	 v = makeItemType(fpString);
 	 v->string.val = s->val;
 	 v->string.len = s->len;
-	 elog(INFO, "makeString %s [%d]", s->val, s->len);
+	 /* elog(INFO, "makeString %s [%d]", s->val, s->len); */
 
 	 return v;
  }
@@ -98,11 +98,11 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
  }
 
  static FhirpathParseItem*
-	 makeItemArray(List *list)
+	 makeItemArray(FhirpathItemType tp, List *list)
  {
-	 FhirpathParseItem	*v = makeItemType(fpPath);
+	 FhirpathParseItem	*v = makeItemType(tp);
 	 v->array.nelems = list_length(list);
-	 elog(INFO, "MakeItemArray: Path lenght %d", list_length(list));
+	 /* elog(INFO, "MakeItemArray: Path lenght %d", list_length(list)); */
 
 	 if (v->array.nelems > 0)
 	 {
@@ -121,6 +121,20 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 	 return v;
  }
+
+
+ static FhirpathParseItem*
+ makeItemOp(FhirpathItemType type, FhirpathParseItem *la, FhirpathParseItem *ra)
+ {
+	 /* elog(INFO, "binary op %d, %d", la->type, ra->type);  */
+	 FhirpathParseItem *v = makeItemType(type);
+
+	 v->args.left = la;
+	 v->args.right = ra;
+
+	 return v;
+ }
+
 
 %}
 
@@ -141,13 +155,12 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 %token	<str>		IN_P IS_P OR_P AND_P NOT_P NULL_P TRUE_P
 					ARRAY_T FALSE_P NUMERIC_T OBJECT_T
-					STRING_T BOOLEAN_T
+					STRING_T BOOLEAN_T PIPE_P
 
 %token	<str>		STRING_P NUMERIC_P
 
 %type	<value>		result
-%type	<value>		expr
-
+%type 	<value>		expr
 %type	<elems>		path
 
 %type 	<value>		key
@@ -167,8 +180,10 @@ result:
 	;
 
 expr:
-	path            				{ $$ = makeItemArray($1); }
+    path                                { $$ = makeItemArray(fpPath, $1); }
+	| expr '|' path                     { $$ = makeItemOp(fpPipe, $1, makeItemArray(fpPath, $3)); }
     ;
+
 /*
  * key is always a string, not a bool or numeric
  */

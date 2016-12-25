@@ -52,8 +52,9 @@
      OBJECT_T = 268,
      STRING_T = 269,
      BOOLEAN_T = 270,
-     STRING_P = 271,
-     NUMERIC_P = 272
+     PIPE_P = 271,
+     STRING_P = 272,
+     NUMERIC_P = 273
    };
 #endif
 /* Tokens.  */
@@ -70,15 +71,16 @@
 #define OBJECT_T 268
 #define STRING_T 269
 #define BOOLEAN_T 270
-#define STRING_P 271
-#define NUMERIC_P 272
+#define PIPE_P 271
+#define STRING_P 272
+#define NUMERIC_P 273
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 135 "fhirpath_gram.y"
+#line 149 "fhirpath_gram.y"
 {
 	string 				str;
 	List				*elems; /* list of FhirpathParseItem */
@@ -86,7 +88,7 @@ typedef union YYSTYPE
 	FhirpathParseItem	*value;
 }
 /* Line 1529 of yacc.c.  */
-#line 90 "fhirpath_gram.h"
+#line 92 "fhirpath_gram.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

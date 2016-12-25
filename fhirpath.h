@@ -17,6 +17,7 @@ typedef struct
 
 typedef enum FhirpathItemType {
 	fpPath,
+	fpPipe,
 	fpKey,
 	fpString,
 	fpNull,

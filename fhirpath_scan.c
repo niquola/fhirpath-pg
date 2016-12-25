@@ -2028,6 +2028,7 @@ static keyword keywords[] = {
 	{ 2, false,	IS_P,		"is"},
 	{ 2, false,	OR_P,		"or"},
 	{ 3, false,	AND_P,		"and"},
+	{ 3, false,	PIPE_P,		"|"},
 	{ 3, false,	NOT_P,		"not"},
 	{ 4, true,	NULL_P,		"null"},
 	{ 4, true,	TRUE_P,		"true"},
@@ -2162,7 +2163,7 @@ parsefhirpath(const char *str, int len) {
 
 	fhirpath_scanner_init(str, len);
 
-	elog(INFO, "parse %s [%d]", str, len);
+	/* elog(INFO, "parse %s [%d]", str, len);*/
 
 	if (fhirpath_yyparse((void*)&parseresult) != 0)
 		fhirpath_yyerror(NULL, "bugus input");
