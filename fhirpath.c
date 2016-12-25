@@ -1,96 +1,18 @@
 #include "postgres.h"
 #include "miscadmin.h"
+#include "fmgr.h"
 #include "lib/stringinfo.h"
 #include "utils/builtins.h"
 #include "utils/json.h"
 #include "fhirpath.h"
+#include "utils/jsonb.h"
 
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
 
 PG_MODULE_MAGIC;
 
-/* This function passed parser AST create binary string */
-/* - pack fhirpath into linear memory (storage representation) */
+void *recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jb, FhirpathItem *path_item);
 
-static int
-flattenFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
-{
-	int32	pos = buf->len - VARHDRSZ; /* position from begining of fhirpath data */
-	int32	next = 0;
-
-	/* we recursive check stack */
-	check_stack_depth();
-
-	/* write item type */
-	appendStringInfoChar(buf, (char)(item->type));
-
-	/* align ???*/
-	alignStringInfoInt(buf);
-
-	next = (item->next) ? buf->len : 0;
-	/*write next field */
-	appendBinaryStringInfo(buf, (char*)&next /* fake value */, sizeof(next));
-
-	switch(item->type) {
-	case fpKey:
-	case fpString:
-		/* elog(INFO, "pack: %s [%d]", item->string.val, item->string.len); */
-		/* write length field*/
-		appendBinaryStringInfo(buf, (char*)&item->string.len, sizeof(item->string.len));
-		/* write string content */
-		appendBinaryStringInfo(buf, item->string.val, item->string.len);
-		appendStringInfoChar(buf, '\0');
-	case fpNull:
-		elog(INFO, "null");
-		break;
-	case fpNode:
-		elog(INFO, "node");
-		break;
-	default:
-		elog(INFO, "unknown: %d", item->type);
-	}
-
-	if (item->next)
-		*(int32*)(buf->data + next) = flattenFhirpathParseItem(buf, item->next);
-
-	return  pos;
-}
-
-static void
-printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
-{
-	FhirpathItem	elem;
-
-	check_stack_depth();
-
-	switch(v->type)
-	{
-	case fpNull:
-		appendStringInfoString(buf, "null");
-		break;
-	case fpKey:
-		if (inKey)
-			appendStringInfoChar(buf, '.');
-		/* follow next */
-	case fpString:
-		/* escape_json(buf, fpGetString(v, NULL)); */
-		appendStringInfoString(buf, fpGetString(v, NULL));
-		break;
-	default:
-		elog(ERROR, "Unknown FhirpathItem type: %d", v->type);
-	}
-
-	if (fpGetNext(v, &elem))
-		printFhirpathItem(buf, &elem, true);
-}
-
-void
-dumpit(char *buf, int32 len) {
-	FILE* f = fopen("/tmp/dump","wb");
-	if(f)
-	fwrite(buf,1, len,f); 
-	fclose(f);
-}
 
 PG_FUNCTION_INFO_V1(fhirpath_in);
 Datum
@@ -109,8 +31,7 @@ fhirpath_in(PG_FUNCTION_ARGS)
 
 	if (fhirpath != NULL)
 	{
-		flattenFhirpathParseItem(&buf, fhirpath);
-
+		serializeFhirpathParseItem(&buf, fhirpath);
 		res = (Fhirpath*)buf.data;
 
 		SET_VARSIZE(res, buf.len);
@@ -142,3 +63,127 @@ fhirpath_out(PG_FUNCTION_ARGS)
 	PG_RETURN_CSTRING(buf.data);
 }
 
+
+#define jbvScalar jbvBinary
+static int
+JsonbType(JsonbValue *jb)
+{
+	int type = jb->type;
+
+	if (jb->type == jbvBinary)
+	{
+		JsonbContainer	*jbc = jb->val.binary.data;
+
+		if (jbc->header & JB_FSCALAR)
+			type = jbvScalar;
+		else if (jbc->header & JB_FOBJECT)
+			type = jbvObject;
+		else if (jbc->header & JB_FARRAY)
+			type = jbvArray;
+		else
+			elog(ERROR, "Unknown container type: 0x%08x", jbc->header);
+	}
+
+	return type;
+}
+
+
+void
+*recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
+{
+
+	char *key;
+
+	JsonbValue	key_v;
+	JsonbValue *next_v;
+	FhirpathItem next_item;
+
+	JsonbIterator *array_it;
+	JsonbValue	array_value;
+	int next_it;
+
+	check_stack_depth();
+
+	switch(path_item->type)
+	{
+	case fpKey:
+		key = fpGetString(path_item, NULL);
+		elog(INFO, "get key: %s", key);
+
+		key_v.type = jbvString;
+		key_v.val.string.len = strlen(key);
+		key_v.val.string.val = key;
+		next_v = findJsonbValueFromContainer((JsonbContainer *) jbv->val.binary.data , JB_FOBJECT, &key_v);
+		if(next_v){
+			Jsonb *out = JsonbValueToJsonb(next_v);
+			elog(INFO, "Next: %s", JsonbToCString(NULL, &out->root, 0));
+			if(next_v->type == jbvBinary){
+				elog(INFO, "binary");
+			}
+		}
+
+		break;
+	default:
+		elog(INFO, "something");
+	}
+
+	if (next_v && fpGetNext(path_item, &next_item)) {
+
+		if(next_v->type == jbvBinary){
+
+		  array_it = JsonbIteratorInit((JsonbContainer *) next_v->val.binary.data);
+		  next_it = JsonbIteratorNext(&array_it, &array_value, true);
+
+		  if(next_it == WJB_BEGIN_ARRAY){
+			  elog(INFO, "We are in array");
+			  while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
+				  if(next_it == WJB_ELEM){
+					  recursive_fhirpath_extract(result, &array_value, &next_item);
+				  }
+			  }
+		  }
+		  else if(next_it == WJB_BEGIN_OBJECT){
+			  elog(INFO, "We are in object");
+			  recursive_fhirpath_extract(result, next_v, &next_item);
+		  }
+		}
+
+	} else if (next_v) {
+		Jsonb *out = JsonbValueToJsonb(next_v);
+		elog(INFO, "Add to result: %s", JsonbToCString(NULL, &out->root, 0));
+		elog(INFO, "Type: %d", next_v->type);
+		result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
+	}
+	return NULL;
+}
+
+
+PG_FUNCTION_INFO_V1(fhirpath_extract);
+Datum
+fhirpath_extract(PG_FUNCTION_ARGS)
+{
+
+	Jsonb       *jb = PG_GETARG_JSONB(0);
+	Fhirpath	*fp_in = PG_GETARG_FHIRPATH(1);
+
+	/* init fhirpath from in disck */
+	FhirpathItem		fp;
+	fpInit(&fp, fp_in);
+
+	/* init jsonbvalue from in disck */
+	JsonbValue	jbv;
+	jbv.type = jbvBinary;
+	jbv.val.binary.data = &jb->root;
+	jbv.val.binary.len = VARSIZE_ANY_EXHDR(jb);
+
+	/* init accumulator */
+	JsonbInState result;
+	memset(&result, 0, sizeof(JsonbInState));
+	result.res = pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
+
+	recursive_fhirpath_extract(&result, &jbv, &fp);
+
+	result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
+
+	PG_RETURN_POINTER(JsonbValueToJsonb(result.res));
+}

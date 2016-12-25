@@ -1,7 +1,7 @@
 # contrib/fhirpath/Makefile
 
 MODULE_big = fhirpath
-OBJS = fhirpath.o fhirpath_gram.o fhirpath_support.o
+OBJS = fhirpath.o fhirpath_gram.o fhirpath_support.o fhirpath_jsonb.o
 
 EXTENSION = fhirpath
 DATA = fhirpath--1.0.sql

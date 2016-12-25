@@ -1,5 +1,5 @@
 #include "postgres.h"
-
+#include "miscadmin.h"
 #include "fhirpath.h"
 
 #define read_byte(v, b, p) do {		\
@@ -11,6 +11,64 @@
 	(v) = *(uint32*)((b) + (p));		\
 	(p) += sizeof(int32);			\
 } while(0)							\
+
+
+void dumpit(char *buf, int32 len);
+
+void
+dumpit(char *buf, int32 len) {
+	FILE* f = fopen("/tmp/dump","wb");
+	if(f)
+		fwrite(buf,1, len,f); 
+	fclose(f);
+}
+
+/* This function passed parser AST create binary string */
+/* - pack fhirpath into linear memory (storage representation) */
+
+int
+serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
+{
+	int32	pos = buf->len - VARHDRSZ; /* position from begining of fhirpath data */
+	int32	next = 0;
+
+	/* we recursive check stack */
+	check_stack_depth();
+
+	/* write item type */
+	appendStringInfoChar(buf, (char)(item->type));
+
+	/* align ???*/
+	alignStringInfoInt(buf);
+
+	next = (item->next) ? buf->len : 0;
+	/*write next field */
+	appendBinaryStringInfo(buf, (char*)&next /* fake value */, sizeof(next));
+
+	switch(item->type) {
+	case fpKey:
+	case fpString:
+		/* elog(INFO, "pack: %s [%d]", item->string.val, item->string.len); */
+		/* write length field*/
+		appendBinaryStringInfo(buf, (char*)&item->string.len, sizeof(item->string.len));
+		/* write string content */
+		appendBinaryStringInfo(buf, item->string.val, item->string.len);
+		appendStringInfoChar(buf, '\0');
+	case fpNull:
+		/* elog(INFO, "null"); */
+		break;
+	case fpNode:
+		/* elog(INFO, "node"); */
+		break;
+	default:
+		elog(INFO, "unknown: %d", item->type);
+	}
+
+	if (item->next)
+		*(int32*)(buf->data + next) =serializeFhirpathParseItem(buf, item->next);
+
+	return  pos;
+}
 
 void
 alignStringInfoInt(StringInfo buf)
@@ -146,4 +204,35 @@ fpIterateArray(FhirpathItem *v, FhirpathItem *e)
 	{
 		return false;
 	}
+}
+
+/* This function passed parser AST create binary string */
+/* - pack fhirpath into linear memory (storage representation) */
+
+void
+printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
+{
+	FhirpathItem	elem;
+
+	check_stack_depth();
+
+	switch(v->type)
+	{
+	case fpNull:
+		appendStringInfoString(buf, "null");
+		break;
+	case fpKey:
+		if (inKey)
+			appendStringInfoChar(buf, '.');
+		/* follow next */
+	case fpString:
+		/* escape_json(buf, fpGetString(v, NULL)); */
+		appendStringInfoString(buf, fpGetString(v, NULL));
+		break;
+	default:
+		elog(ERROR, "Unknown FhirpathItem type: %d", v->type);
+	}
+
+	if (fpGetNext(v, &elem))
+		printFhirpathItem(buf, &elem, true);
 }

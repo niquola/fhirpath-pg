@@ -93,4 +93,13 @@ extern void fpIterateInit(FhirpathItem *v);
 extern bool fpIterateArray(FhirpathItem *v, FhirpathItem *e);
 void alignStringInfoInt(StringInfo buf);
 
+extern int serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item);
+extern void printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey);
+
+typedef struct JsonbInState
+{
+	JsonbParseState *parseState;
+	JsonbValue *res;
+} JsonbInState;
+
 #endif

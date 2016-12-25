@@ -20,3 +20,7 @@ CREATE TYPE fhirpath (
 	STORAGE = extended
 );
 
+CREATE OR REPLACE FUNCTION fhirpath_extract(jsonb, fhirpath)
+RETURNS jsonb
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT IMMUTABLE;
