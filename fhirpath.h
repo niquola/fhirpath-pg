@@ -16,9 +16,10 @@ typedef struct
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
 
 typedef enum FhirpathItemType {
-	fpNull,
+	fpPath,
 	fpKey,
 	fpString,
+	fpNull,
 	fpNode
 } FhirpathItemType;
 

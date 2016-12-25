@@ -2,15 +2,15 @@
 #include "miscadmin.h"
 #include "fhirpath.h"
 
-#define read_byte(v, b, p) do {		\
-	(v) = *(uint8*)((b) + (p));		\
-	(p) += 1;						\
-} while(0)							\
+#define read_byte(v, b, p) do {					\
+		(v) = *(uint8*)((b) + (p));				\
+		(p) += 1;								\
+	} while(0)									\
 
-#define read_int32(v, b, p) do {	\
-	(v) = *(uint32*)((b) + (p));		\
-	(p) += sizeof(int32);			\
-} while(0)							\
+#define read_int32(v, b, p) do {				\
+		(v) = *(uint32*)((b) + (p));			\
+		(p) += sizeof(int32);					\
+	} while(0)									\
 
 
 void dumpit(char *buf, int32 len);
@@ -31,6 +31,7 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 {
 	int32	pos = buf->len - VARHDRSZ; /* position from begining of fhirpath data */
 	int32	next = 0;
+	int32	chld;
 
 	/* we recursive check stack */
 	check_stack_depth();
@@ -48,17 +49,35 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 	switch(item->type) {
 	case fpKey:
 	case fpString:
-		/* elog(INFO, "pack: %s [%d]", item->string.val, item->string.len); */
+		elog(INFO, "serialize key: %s [%d]", item->string.val, item->string.len);
 		/* write length field*/
 		appendBinaryStringInfo(buf, (char*)&item->string.len, sizeof(item->string.len));
 		/* write string content */
 		appendBinaryStringInfo(buf, item->string.val, item->string.len);
 		appendStringInfoChar(buf, '\0');
+		break;
+	case fpPath:
+		elog(INFO, "serialize fpPath");
+	{
+		int32	i, arrayStart;
+
+		appendBinaryStringInfo(buf, (char*)&item->array.nelems, sizeof(item->array.nelems));
+		arrayStart = buf->len;
+
+		elog(INFO, "serialize array %d elems", item->array.nelems);
+		/* reserve place for "pointers" to array's elements */
+		for(i=0; i < item->array.nelems; i++)
+			appendBinaryStringInfo(buf, (char*)&i /* fake value */, sizeof(i));
+
+		for(i=0; i<item->array.nelems; i++)
+		{
+			chld = serializeFhirpathParseItem(buf, item->array.elems[i]);
+			*(int32*)(buf->data + arrayStart + i * sizeof(i)) = chld;
+		}
+	}
+		break;
 	case fpNull:
 		/* elog(INFO, "null"); */
-		break;
-	case fpNode:
-		/* elog(INFO, "node"); */
 		break;
 	default:
 		elog(INFO, "unknown: %d", item->type);
@@ -75,14 +94,14 @@ alignStringInfoInt(StringInfo buf)
 {
 	switch(INTALIGN(buf->len) - buf->len)
 	{
-		case 3:
-			appendStringInfoCharMacro(buf, 0);
-		case 2:
-			appendStringInfoCharMacro(buf, 0);
-		case 1:
-			appendStringInfoCharMacro(buf, 0);
-		default:
-			break;
+	case 3:
+		appendStringInfoCharMacro(buf, 0);
+	case 2:
+		appendStringInfoCharMacro(buf, 0);
+	case 1:
+		appendStringInfoCharMacro(buf, 0);
+	default:
+		break;
 	}
 }
 
@@ -95,31 +114,38 @@ fpInit(FhirpathItem *v, Fhirpath *js)
 void
 fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 {
+
 	v->base = base;
 	read_byte(v->type, base, pos);
 
 	switch(INTALIGN(pos) - pos)
 	{
-		case 3: pos++;
-		case 2: pos++;
-		case 1: pos++;
-		default: break;
+	case 3: pos++;
+	case 2: pos++;
+	case 1: pos++;
+	default: break;
 	}
 
 	read_int32(v->nextPos, base, pos);
 
 	switch(v->type)
 	{
-		case fpNull:
-			break;
-		case fpKey:
-		case fpString:
-			read_int32(v->value.datalen, base, pos);
-			v->value.data = base + pos;
-			break;
-		default:
-			abort();
-			elog(ERROR, "Unknown type: %d", v->type);
+	case fpNull:
+		break;
+	case fpKey:
+	case fpString:
+		read_int32(v->value.datalen, base, pos);
+		v->value.data = base + pos;
+		break;
+	case fpPath:
+		read_int32(v->array.nelems, base, pos);
+		elog(INFO, "Init array: %d", v->array.nelems);
+		v->array.current = 0;
+		v->array.arrayPtr = (int32*)(base + pos);
+		break;
+	default:
+		elog(ERROR, "Unknown type: %d", v->type);
+		abort();
 	}
 }
 
@@ -213,21 +239,35 @@ void
 printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 {
 	FhirpathItem	elem;
+	bool first = true;
 
 	check_stack_depth();
 
 	switch(v->type)
 	{
 	case fpNull:
-		appendStringInfoString(buf, "null");
 		break;
 	case fpKey:
-		if (inKey)
-			appendStringInfoChar(buf, '.');
-		/* follow next */
-	case fpString:
-		/* escape_json(buf, fpGetString(v, NULL)); */
+		elog(INFO, "print fpKey %s", fpGetString(v, NULL));
 		appendStringInfoString(buf, fpGetString(v, NULL));
+		break;
+	case fpString:
+		elog(INFO, "print fpString not impl");
+		/* escape_json(buf, fpGetString(v, NULL)); */
+		/* appendStringInfoString(buf, fpGetString(v, NULL)); */
+		break;
+	case fpPath:
+		elog(INFO, "print array");
+		while(fpIterateArray(v, &elem))
+		{
+			elog(INFO, "array next");
+			if (first == false)
+				appendStringInfoChar(buf, '.');
+			else
+				first = false;
+
+			printFhirpathItem(buf, &elem, false);
+		}
 		break;
 	default:
 		elog(ERROR, "Unknown FhirpathItem type: %d", v->type);

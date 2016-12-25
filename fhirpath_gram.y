@@ -55,16 +55,10 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
  {
 	 FhirpathParseItem *v;
 
-	 if (s == NULL)
-	 {
-		 v = makeItemType(fpNull);
-	 }
-	 else
-	 {
-		 v = makeItemType(fpString);
-		 v->string.val = s->val;
-		 v->string.len = s->len;
-	 }
+	 v = makeItemType(fpString);
+	 v->string.val = s->val;
+	 v->string.len = s->len;
+	 elog(INFO, "makeString %s [%d]", s->val, s->len);
 
 	 return v;
  }
@@ -90,13 +84,40 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 	 return head;
  }
+
  static FhirpathParseItem*
 	 makeItemKey(string *s)
  {
 	 FhirpathParseItem *v;
 
+	 /* elog(INFO, "makeItemKey %s [%d]", s->val, s->len); */
 	 v = makeItemString(s);
 	 v->type = fpKey;
+
+	 return v;
+ }
+
+ static FhirpathParseItem*
+	 makeItemArray(List *list)
+ {
+	 FhirpathParseItem	*v = makeItemType(fpPath);
+	 v->array.nelems = list_length(list);
+	 elog(INFO, "MakeItemArray: Path lenght %d", list_length(list));
+
+	 if (v->array.nelems > 0)
+	 {
+		 ListCell	*cell;
+		 int			i = 0;
+
+		 v->array.elems = palloc(sizeof(FhirpathParseItem) * v->array.nelems);
+
+		 foreach(cell, list)
+			 v->array.elems[i++] = (FhirpathParseItem*)lfirst(cell);
+	 }
+	 else
+	 {
+		 v->array.elems = NULL;
+	 }
 
 	 return v;
  }
@@ -129,7 +150,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 %type	<elems>		path
 
-%type 	<value>		key key_any
+%type 	<value>		key
 
 %left OR_P 
 %left AND_P 
@@ -146,7 +167,7 @@ result:
 	;
 
 expr:
-	path            				{ $$ = makeItemList($1); }
+	path            				{ $$ = makeItemArray($1); }
     ;
 /*
  * key is always a string, not a bool or numeric
@@ -155,16 +176,9 @@ key:
     STRING_P						{ $$ = makeItemKey(&$1); }
 	;
 
-/*
- * NOT keyword needs separate processing 
- */
-key_any:
-	key								{ $$ = $$; }
-	;
-
 path:
 	key								{ $$ = lappend(NIL, $1); }
-	| path '.' key_any				{ $$ = lappend($1, $3); }
+	| path '.' key   				{ $$ = lappend($1, $3); }
 	;
 
 %%

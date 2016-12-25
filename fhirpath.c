@@ -24,21 +24,23 @@ fhirpath_in(PG_FUNCTION_ARGS)
 	Fhirpath    		*res;
 	StringInfoData		buf;
 
-	initStringInfo(&buf);
-	enlargeStringInfo(&buf, len /* estimation */);
-
-	appendStringInfoSpaces(&buf, VARHDRSZ);
-
 	if (fhirpath != NULL)
 	{
+
+		initStringInfo(&buf);
+		enlargeStringInfo(&buf, len /* estimation */);
+		appendStringInfoSpaces(&buf, VARHDRSZ);
+
 		serializeFhirpathParseItem(&buf, fhirpath);
 		res = (Fhirpath*)buf.data;
 
+		elog(INFO, "serialized");
 		SET_VARSIZE(res, buf.len);
 		PG_RETURN_FHIRPATH(res);
+	} else {
+		elog(INFO, "parse error");
+		PG_RETURN_NULL();
 	}
-
-	PG_RETURN_NULL();
 
 }
 
@@ -53,11 +55,16 @@ fhirpath_out(PG_FUNCTION_ARGS)
 	StringInfoData  	buf;
 	FhirpathItem		v;
 
+	elog(INFO, "deserialize");
+
 	initStringInfo(&buf);
 	enlargeStringInfo(&buf, VARSIZE(in) /* estimation */);
 
 	fpInit(&v, in);
+
 	printFhirpathItem(&buf, &v, false);
+
+	elog(INFO, "printed: %s", buf.data);
 
 
 	PG_RETURN_CSTRING(buf.data);
@@ -132,15 +139,6 @@ void
 	}
 	return NULL;
 }
-
-void
-dumpit(char *buf, int32 len) {
-	FILE* f = fopen("/tmp/dump","wb");
-	if(f)
-		fwrite(buf,1, len,f); 
-	fclose(f);
-}
-
 
 
 PG_FUNCTION_INFO_V1(fhirpath_extract);

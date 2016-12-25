@@ -2162,6 +2162,8 @@ parsefhirpath(const char *str, int len) {
 
 	fhirpath_scanner_init(str, len);
 
+	elog(INFO, "parse %s [%d]", str, len);
+
 	if (fhirpath_yyparse((void*)&parseresult) != 0)
 		fhirpath_yyerror(NULL, "bugus input");
 
