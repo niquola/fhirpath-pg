@@ -64,30 +64,6 @@ fhirpath_out(PG_FUNCTION_ARGS)
 }
 
 
-#define jbvScalar jbvBinary
-static int
-JsonbType(JsonbValue *jb)
-{
-	int type = jb->type;
-
-	if (jb->type == jbvBinary)
-	{
-		JsonbContainer	*jbc = jb->val.binary.data;
-
-		if (jbc->header & JB_FSCALAR)
-			type = jbvScalar;
-		else if (jbc->header & JB_FOBJECT)
-			type = jbvObject;
-		else if (jbc->header & JB_FARRAY)
-			type = jbvArray;
-		else
-			elog(ERROR, "Unknown container type: 0x%08x", jbc->header);
-	}
-
-	return type;
-}
-
-
 void
 *recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
 {
@@ -95,7 +71,7 @@ void
 	char *key;
 
 	JsonbValue	key_v;
-	JsonbValue *next_v;
+	JsonbValue *next_v = NULL;
 	FhirpathItem next_item;
 
 	JsonbIterator *array_it;
@@ -156,6 +132,15 @@ void
 	}
 	return NULL;
 }
+
+void
+dumpit(char *buf, int32 len) {
+	FILE* f = fopen("/tmp/dump","wb");
+	if(f)
+		fwrite(buf,1, len,f); 
+	fclose(f);
+}
+
 
 
 PG_FUNCTION_INFO_V1(fhirpath_extract);
