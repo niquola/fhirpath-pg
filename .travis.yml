@@ -15,6 +15,14 @@ before_install:
   - sudo /etc/init.d/postgresql restart
   - sudo apt-get install -y clang-3.5 llvm-3.5-dev libedit-dev
 
+before_script:
+  - createuser -U postgres -s travis
+
+env:
+  matrix:
+    - PGVERSION=9.6
+    - PGVERSION=9.5
+
 language: cpp
 compiler:
   - clang
