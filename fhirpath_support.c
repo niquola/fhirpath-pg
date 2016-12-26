@@ -48,6 +48,7 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 
 	switch(item->type) {
 	case fpEqual:
+	case fpOr:
 	case fpPipe:
 		/* elog(INFO, "pipe"); */
 	{
@@ -138,6 +139,7 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 		v->value.data = base + pos;
 		break;
 	case fpEqual:
+	case fpOr:
 	case fpPipe:
 		read_int32(v->args.left, base, pos);
 		read_int32(v->args.right, base, pos);
@@ -263,6 +265,13 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		fpGetLeftArg(v, &elem);
 		printFhirpathItem(buf, &elem, false);
 		appendStringInfoString(buf, " | ");
+		fpGetRightArg(v, &elem);
+		printFhirpathItem(buf, &elem, false);
+		break;
+	case fpOr:
+		fpGetLeftArg(v, &elem);
+		printFhirpathItem(buf, &elem, false);
+		appendStringInfoString(buf, " OR ");
 		fpGetRightArg(v, &elem);
 		printFhirpathItem(buf, &elem, false);
 		break;

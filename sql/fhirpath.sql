@@ -31,4 +31,6 @@ SELECT fhirpath_extract(
 '{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
 ,'Patient.name.where(use="common").family');
 
+SELECT '.name OR .alias'::fhirpath as fhirpath;
+
 --}}}

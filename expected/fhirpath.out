@@ -79,4 +79,10 @@ SELECT fhirpath_extract(
  [["petrov"]]
 (1 row)
 
+SELECT '.name OR .alias'::fhirpath as fhirpath;
+    fhirpath     
+-----------------
+ .name OR .alias
+(1 row)
+
 --}}}

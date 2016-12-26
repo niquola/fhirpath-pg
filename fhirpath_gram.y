@@ -195,6 +195,7 @@ result:
 expr:
     path                                { $$ = makeItemList($1); }
 	| expr '|' path                     { $$ = makeItemOp(fpPipe, $1, makeItemList($3)); }
+    | expr OR_P path                    { $$ = makeItemOp(fpOr, $1, makeItemList($3)); }
     ;
 
 /*
