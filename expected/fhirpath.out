@@ -1,54 +1,22 @@
 --db:test -e
 --{{{
+
 DROP EXTENSION IF EXISTS fhirpath;
 NOTICE:  extension "fhirpath" does not exist, skipping
 CREATE EXTENSION fhirpath;
 SELECT fhirpath_extract('{"a":"1", "b":{"c":"2", "d": [1,2,{"x":100}], "e":{"f": 4}}}', 'b.e.f');
-INFO:  get key: b
-INFO:  Next: {"c": "2", "d": [1, 2, {"x": 100}], "e": {"f": 4}}
-INFO:  binary
-INFO:  We are in object
-INFO:  get key: e
-INFO:  Next: {"f": 4}
-INFO:  binary
-INFO:  We are in object
-INFO:  get key: f
-INFO:  Next: 4
-INFO:  Add to result: 4
-INFO:  Type: 2
  fhirpath_extract 
 ------------------
  [4]
 (1 row)
 
 SELECT fhirpath_extract('{"b":{"c":"2"}}', 'b.c');
-INFO:  get key: b
-INFO:  Next: {"c": "2"}
-INFO:  binary
-INFO:  We are in object
-INFO:  get key: c
-INFO:  Next: "2"
-INFO:  Add to result: "2"
-INFO:  Type: 1
  fhirpath_extract 
 ------------------
  ["2"]
 (1 row)
 
 SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', 'b.c');
-INFO:  get key: b
-INFO:  Next: [{"c": 1}, {"c": 2}, {"x": "ups"}]
-INFO:  binary
-INFO:  We are in array
-INFO:  get key: c
-INFO:  Next: 1
-INFO:  Add to result: 1
-INFO:  Type: 2
-INFO:  get key: c
-INFO:  Next: 2
-INFO:  Add to result: 2
-INFO:  Type: 2
-INFO:  get key: c
  fhirpath_extract 
 ------------------
  [1, 2]
