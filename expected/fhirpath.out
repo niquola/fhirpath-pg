@@ -42,7 +42,7 @@ SELECT fhirpath_extract('{"resourceType":"Patient", "field": 1}', 'Patient.field
 SELECT fhirpath_extract('{"resourceType":"Encounter", "field": 1}', 'Patient.field');
  fhirpath_extract 
 ------------------
- []
+ 
 (1 row)
 
 SELECT fhirpath_extract('{"a":"1", "b":{"c":"2", "d": [1,2,{"x":100}], "e":{"f": 4}}}', '.b.e.f');
@@ -55,6 +55,12 @@ SELECT fhirpath_extract('{"b":{"c":"2"}}', '.b.c');
  fhirpath_extract 
 ------------------
  ["2"]
+(1 row)
+
+SELECT fhirpath_extract('{}', '.unexisting');
+ fhirpath_extract 
+------------------
+ 
 (1 row)
 
 SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', '.b.c');
@@ -83,6 +89,18 @@ SELECT '.name OR .alias'::fhirpath as fhirpath;
     fhirpath     
 -----------------
  .name OR .alias
+(1 row)
+
+SELECT fhirpath_extract('{"b":1, "c":2}', '.b OR .c');
+ fhirpath_extract 
+------------------
+ [1]
+(1 row)
+
+SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
+ fhirpath_extract 
+------------------
+ [2]
 (1 row)
 
 --}}}

@@ -11,8 +11,6 @@
 
 PG_MODULE_MAGIC;
 
-void *recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jb, FhirpathItem *path_item);
-
 void initJsonbValue(JsonbValue *jbv, Jsonb *jb);
 
 
@@ -88,12 +86,13 @@ static JsonbValue
 }
 
 
-void
-*recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
+static long
+recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
 {
 
 	char *key;
 	char *valueToCompare;
+	long num_results = 0;
 
 	JsonbValue *next_v = NULL;
 	FhirpathItem next_item;
@@ -106,13 +105,25 @@ void
 
 	switch(path_item->type)
 	{
+
+	case fpOr:
+		/* elog(INFO, "extract fppipe"); */
+		fpGetLeftArg(path_item, &next_item);
+		num_results = recursive_fhirpath_extract(result, jbv, &next_item);
+
+		if(num_results == 0){
+			fpGetRightArg(path_item, &next_item);
+			num_results += recursive_fhirpath_extract(result, jbv, &next_item);
+		}
+
+		break;
 	case fpPipe:
 		/* elog(INFO, "extract fppipe"); */
 		fpGetLeftArg(path_item, &next_item);
-		recursive_fhirpath_extract(result, jbv, &next_item);
+		num_results = recursive_fhirpath_extract(result, jbv, &next_item);
 
 		fpGetRightArg(path_item, &next_item);
-		recursive_fhirpath_extract(result, jbv, &next_item);
+		num_results += recursive_fhirpath_extract(result, jbv, &next_item);
 
 		break;
 	case fpEqual:
@@ -125,7 +136,7 @@ void
 		/* elog(INFO, "fpEqual: %s = %s, but %s", key, valueToCompare, next_v->val.string.val); */
 		if(next_v != NULL && next_v->type == jbvString && strcmp(valueToCompare, next_v->val.string.val) == 0){
 			if (fpGetNext(path_item, &next_item)) {
-				recursive_fhirpath_extract(result, jbv, &next_item);
+				num_results = recursive_fhirpath_extract(result, jbv, &next_item);
 			}
 		}
 		break;
@@ -135,7 +146,7 @@ void
 		/* elog(INFO, "fpResourceType: %s, %s",  key, next_v->val.string.val); */
 		if(next_v != NULL && next_v->type == jbvString && strcmp(key, next_v->val.string.val) == 0){
 			if (fpGetNext(path_item, &next_item)) {
-				recursive_fhirpath_extract(result, jbv, &next_item);
+				num_results = recursive_fhirpath_extract(result, jbv, &next_item);
 			}
 		}
 		break;
@@ -156,13 +167,13 @@ void
 					/* elog(INFO, "We are in array"); */
 					while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
 						if(next_it == WJB_ELEM){
-							recursive_fhirpath_extract(result, &array_value, &next_item);
+							num_results += recursive_fhirpath_extract(result, &array_value, &next_item);
 						}
 					}
 				}
 				else if(next_it == WJB_BEGIN_OBJECT){
 					/* elog(INFO, "We are in object"); */
-					recursive_fhirpath_extract(result, next_v, &next_item);
+					num_results += recursive_fhirpath_extract(result, next_v, &next_item);
 				}
 			}
 
@@ -172,13 +183,15 @@ void
 			/* elog(INFO, "Add to result: %s", JsonbToCString(NULL, &out->root, 0)); */
 			/* elog(INFO, "Type: %d", next_v->type); */
 			result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
+			num_results += 1;
 		}
 		break;
 	default:
 		elog(INFO, "TODO extract");
 	}
 
-	return NULL;
+	/* elog(INFO, "num results %lu", num_results); */
+	return num_results;
 }
 
 void
@@ -209,9 +222,13 @@ fhirpath_extract(PG_FUNCTION_ARGS)
 	memset(&result, 0, sizeof(JsonbInState));
 	result.res = pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
 
-	recursive_fhirpath_extract(&result, &jbv, &fp);
+	long num_results = recursive_fhirpath_extract(&result, &jbv, &fp);
 
 	result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
+	if(num_results > 0){
+		PG_RETURN_POINTER(JsonbValueToJsonb(result.res));
+	} else {
+		PG_RETURN_NULL();
+	}
 
-	PG_RETURN_POINTER(JsonbValueToJsonb(result.res));
 }

@@ -21,6 +21,8 @@ SELECT fhirpath_extract('{"a":"1", "b":{"c":"2", "d": [1,2,{"x":100}], "e":{"f":
 
 SELECT fhirpath_extract('{"b":{"c":"2"}}', '.b.c');
 
+SELECT fhirpath_extract('{}', '.unexisting');
+
 SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', '.b.c');
 
 SELECT fhirpath_extract(
@@ -32,5 +34,9 @@ SELECT fhirpath_extract(
 ,'Patient.name.where(use="common").family');
 
 SELECT '.name OR .alias'::fhirpath as fhirpath;
+
+SELECT fhirpath_extract('{"b":1, "c":2}', '.b OR .c');
+
+SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
 
 --}}}
