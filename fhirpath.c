@@ -73,7 +73,7 @@ fhirpath_out(PG_FUNCTION_ARGS)
 }
 
 
-JsonbValue
+static JsonbValue
 *getKey(char *key, JsonbValue *jbv){
 	JsonbValue	key_v;
 	key_v.type = jbvString;
@@ -93,6 +93,7 @@ void
 {
 
 	char *key;
+	char *valueToCompare;
 
 	JsonbValue *next_v = NULL;
 	FhirpathItem next_item;
@@ -114,14 +115,26 @@ void
 		recursive_fhirpath_extract(result, jbv, &next_item);
 
 		break;
+	case fpEqual:
+		fpGetLeftArg(path_item, &next_item);
+		key = fpGetString(&next_item, NULL);
+
+		fpGetRightArg(path_item, &next_item);
+		valueToCompare = fpGetString(&next_item, NULL);
+		next_v = getKey(key, jbv);
+		/* elog(INFO, "fpEqual: %s = %s, but %s", key, valueToCompare, next_v->val.string.val); */
+		if(next_v != NULL && next_v->type == jbvString && strcmp(valueToCompare, next_v->val.string.val) == 0){
+			if (fpGetNext(path_item, &next_item)) {
+				recursive_fhirpath_extract(result, jbv, &next_item);
+			}
+		}
+		break;
 	case fpResourceType:
 		key = fpGetString(path_item, NULL);
 		next_v = getKey("resourceType", jbv);
 		/* elog(INFO, "fpResourceType: %s, %s",  key, next_v->val.string.val); */
 		if(next_v != NULL && next_v->type == jbvString && strcmp(key, next_v->val.string.val) == 0){
 			if (fpGetNext(path_item, &next_item)) {
-				key = fpGetString(path_item, NULL);
-				/* elog(INFO, "resource type: %s", key); */
 				recursive_fhirpath_extract(result, jbv, &next_item);
 			}
 		}

@@ -58,7 +58,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	 v = makeItemType(fpString);
 	 v->string.val = s->val;
 	 v->string.len = s->len;
-	 /* elog(INFO, "makeString %s [%d]", s->val, s->len); */
+	 /* elog(INFO, "makeItemString %s [%d]", s->val, s->len); */
 
 	 return v;
  }
@@ -105,7 +105,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	 v = makeItemType(fpResourceType);
 	 v->string.val = s->val;
 	 v->string.len = s->len;
-	 /* elog(INFO, "makeString %s [%d]", s->val, s->len); */
+	 /* elog(INFO, "makeItemString %s [%d]", s->val, s->len); */
 
 	 return v;
  }
@@ -166,7 +166,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	FhirpathParseItem	*value;
 }
 
-%token	<str>		IN_P IS_P OR_P AND_P NOT_P NULL_P TRUE_P
+%token	<str>		WHERE_P IN_P IS_P OR_P AND_P NOT_P NULL_P TRUE_P
 					ARRAY_T FALSE_P NUMERIC_T OBJECT_T
 					STRING_T BOOLEAN_T PIPE_P
 
@@ -181,7 +181,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 %left OR_P 
 %left AND_P 
 %right NOT_P 
-%nonassoc IN_P IS_P 
+%nonassoc IN_P IS_P WHERE_P
 %nonassoc '(' ')'
 
 /* Grammar follows */
@@ -200,8 +200,10 @@ expr:
 /*
  * key is always a string, not a bool or numeric
  */
+
 key:
-    STRING_P						{ $$ = makeItemKey(&$1); }
+    WHERE_P '(' STRING_P '=' STRING_P ')'   { $$ = makeItemOp(fpEqual, makeItemString(&$3), makeItemString(&$5)); }
+    | STRING_P		        				{ $$ = makeItemKey(&$1); }
 	;
 
 path:

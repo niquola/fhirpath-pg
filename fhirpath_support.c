@@ -47,6 +47,7 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 	appendBinaryStringInfo(buf, (char*)&next /* fake value */, sizeof(next));
 
 	switch(item->type) {
+	case fpEqual:
 	case fpPipe:
 		/* elog(INFO, "pipe"); */
 	{
@@ -136,6 +137,7 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 		read_int32(v->value.datalen, base, pos);
 		v->value.data = base + pos;
 		break;
+	case fpEqual:
 	case fpPipe:
 		read_int32(v->args.left, base, pos);
 		read_int32(v->args.right, base, pos);
@@ -263,6 +265,15 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		appendStringInfoString(buf, " | ");
 		fpGetRightArg(v, &elem);
 		printFhirpathItem(buf, &elem, false);
+		break;
+	case fpEqual:
+		fpGetLeftArg(v, &elem);
+		appendStringInfoString(buf, ".where(");
+		appendStringInfoString(buf, fpGetString(&elem, NULL));
+		appendStringInfoString(buf, "=");
+		fpGetRightArg(v, &elem);
+		appendStringInfoString(buf, fpGetString(&elem, NULL));
+		appendStringInfoString(buf, ")");
 		break;
 	default:
 		elog(ERROR, "Print: unknown type: %d", v->type);

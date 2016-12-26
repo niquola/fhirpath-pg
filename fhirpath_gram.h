@@ -39,41 +39,43 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     IN_P = 258,
-     IS_P = 259,
-     OR_P = 260,
-     AND_P = 261,
-     NOT_P = 262,
-     NULL_P = 263,
-     TRUE_P = 264,
-     ARRAY_T = 265,
-     FALSE_P = 266,
-     NUMERIC_T = 267,
-     OBJECT_T = 268,
-     STRING_T = 269,
-     BOOLEAN_T = 270,
-     PIPE_P = 271,
-     STRING_P = 272,
-     NUMERIC_P = 273
+     WHERE_P = 258,
+     IN_P = 259,
+     IS_P = 260,
+     OR_P = 261,
+     AND_P = 262,
+     NOT_P = 263,
+     NULL_P = 264,
+     TRUE_P = 265,
+     ARRAY_T = 266,
+     FALSE_P = 267,
+     NUMERIC_T = 268,
+     OBJECT_T = 269,
+     STRING_T = 270,
+     BOOLEAN_T = 271,
+     PIPE_P = 272,
+     STRING_P = 273,
+     NUMERIC_P = 274
    };
 #endif
 /* Tokens.  */
-#define IN_P 258
-#define IS_P 259
-#define OR_P 260
-#define AND_P 261
-#define NOT_P 262
-#define NULL_P 263
-#define TRUE_P 264
-#define ARRAY_T 265
-#define FALSE_P 266
-#define NUMERIC_T 267
-#define OBJECT_T 268
-#define STRING_T 269
-#define BOOLEAN_T 270
-#define PIPE_P 271
-#define STRING_P 272
-#define NUMERIC_P 273
+#define WHERE_P 258
+#define IN_P 259
+#define IS_P 260
+#define OR_P 261
+#define AND_P 262
+#define NOT_P 263
+#define NULL_P 264
+#define TRUE_P 265
+#define ARRAY_T 266
+#define FALSE_P 267
+#define NUMERIC_T 268
+#define OBJECT_T 269
+#define STRING_T 270
+#define BOOLEAN_T 271
+#define PIPE_P 272
+#define STRING_P 273
+#define NUMERIC_P 274
 
 
 
@@ -88,7 +90,7 @@ typedef union YYSTYPE
 	FhirpathParseItem	*value;
 }
 /* Line 1529 of yacc.c.  */
-#line 92 "fhirpath_gram.h"
+#line 94 "fhirpath_gram.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

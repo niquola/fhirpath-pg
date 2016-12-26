@@ -3,7 +3,12 @@
 DROP EXTENSION IF EXISTS fhirpath;
 NOTICE:  extension "fhirpath" does not exist, skipping
 CREATE EXTENSION fhirpath;
--- SELECT 'Patient.name.given'::fhirpath as fhirpath;
+SELECT 'Patient.name.given'::fhirpath as fhirpath;
+      fhirpath      
+--------------------
+ Patient.name.given
+(1 row)
+
 SELECT '.name.given'::fhirpath as fhirpath;
   fhirpath   
 -------------
@@ -14,6 +19,18 @@ SELECT 'Patient.name.given'::fhirpath as fhirpath;
       fhirpath      
 --------------------
  Patient.name.given
+(1 row)
+
+SELECT 'Patient.name.where(use=official).given'::fhirpath as fhirpath;
+                fhirpath                
+----------------------------------------
+ Patient.name.where(use=official).given
+(1 row)
+
+SELECT '.name.where(use=official).given'::fhirpath as fhirpath;
+            fhirpath             
+---------------------------------
+ .name.where(use=official).given
 (1 row)
 
 SELECT fhirpath_extract('{"resourceType":"Patient", "field": 1}', 'Patient.field');
@@ -46,8 +63,20 @@ SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', '.b.c');
  [1, 2]
 (1 row)
 
--- SELECT fhirpath_extract('{}', '.name.given');
--- SELECT fhirpath_extract('{}', 'Patient.name.given');
--- SELECT fhirpath_extract('{}', 'Patient.name.where(use="official").family');
--- SELECT fhirpath_extract('{}', 'Patient.name.given OR Patient.name.family');
+SELECT fhirpath_extract(
+  '{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
+  ,'Patient.name.where(use=official).family');
+ fhirpath_extract 
+------------------
+ [["ivanov"]]
+(1 row)
+
+SELECT fhirpath_extract(
+'{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
+,'Patient.name.where(use="common").family');
+ fhirpath_extract 
+------------------
+ [["petrov"]]
+(1 row)
+
 --}}}

@@ -19,13 +19,13 @@ typedef struct
 typedef enum FhirpathItemType {
 	fpPipe,
 	fpKey,
+	fpEqual,
 	fpResourceType,
 	fpString,
 	fpNull
 } FhirpathItemType;
 
 typedef struct FhirpathParseItem FhirpathParseItem;
-
 /* in memory representation parse tree of fhirpath */
 struct FhirpathParseItem {
 	FhirpathItemType	type;

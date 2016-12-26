@@ -10,8 +10,7 @@ REGRESS = fhirpath
 # We need a UTF8 database
 ENCODING = UTF8
 
-# EXTRA_CLEAN = y.tab.c y.tab.h \
-# 				fhirpath_gram.c fhirpath_scan.c fhirpath_gram.h
+EXTRA_CLEAN = fhirpath_gram.c fhirpath_gram.o fhirpath_scan.c fhirpath_gram.h
 
 ifdef USE_PGXS
 PG_CONFIG ?= pg_config
