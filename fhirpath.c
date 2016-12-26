@@ -90,7 +90,7 @@ void
 	switch(path_item->type)
 	{
 	case fpPipe:
-		elog(INFO, "extract fppipe");
+		/* elog(INFO, "extract fppipe"); */
 		fpGetLeftArg(path_item, &next_item);
 		recursive_fhirpath_extract(result, jbv, &next_item);
 
@@ -100,7 +100,7 @@ void
 		break;
 	case fpKey:
 		key = fpGetString(path_item, NULL);
-		elog(INFO, "get key: %s", key);
+		/* elog(INFO, "get key: %s", key); */
 
 		key_v.type = jbvString;
 		key_v.val.string.len = strlen(key);
@@ -172,9 +172,7 @@ fhirpath_extract(PG_FUNCTION_ARGS)
 	memset(&result, 0, sizeof(JsonbInState));
 	result.res = pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
 
-	elog(INFO, "start extract");
 	recursive_fhirpath_extract(&result, &jbv, &fp);
-	elog(INFO, "end extract");
 
 	result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
 
