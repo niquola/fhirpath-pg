@@ -32,7 +32,7 @@ sudo: required
 dist: trusty
 
 script:
-  - make USE_PGXS=1 && sudo make install USE_PGXS=1 && make installcheck
+  - make USE_PGXS=1 && sudo make install USE_PGXS=1 && make installcheck USE_PGXS=1
 
 after_script:
   - cat regression.diffs || true
