@@ -180,8 +180,8 @@ result:
 	;
 
 expr:
-    path                                { $$ = makeItemArray(fpPath, $1); }
-	| expr '|' path                     { $$ = makeItemOp(fpPipe, $1, makeItemArray(fpPath, $3)); }
+    path                                { $$ = makeItemList($1); }
+	| expr '|' path                     { $$ = makeItemOp(fpPipe, $1, makeItemList($3)); }
     ;
 
 /*

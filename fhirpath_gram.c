@@ -1501,12 +1501,12 @@ yyreduce:
 
   case 4:
 #line 183 "fhirpath_gram.y"
-    { (yyval.value) = makeItemArray(fpPath, (yyvsp[(1) - (1)].elems)); ;}
+    { (yyval.value) = makeItemList((yyvsp[(1) - (1)].elems)); ;}
     break;
 
   case 5:
 #line 184 "fhirpath_gram.y"
-    { (yyval.value) = makeItemOp(fpPipe, (yyvsp[(1) - (3)].value), makeItemArray(fpPath, (yyvsp[(3) - (3)].elems))); ;}
+    { (yyval.value) = makeItemOp(fpPipe, (yyvsp[(1) - (3)].value), makeItemList((yyvsp[(3) - (3)].elems))); ;}
     break;
 
   case 6:

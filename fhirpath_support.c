@@ -73,26 +73,6 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 		appendBinaryStringInfo(buf, item->string.val, item->string.len);
 		appendStringInfoChar(buf, '\0');
 		break;
-	case fpPath:
-		/* elog(INFO, "serialize fpPath"); */
-	{
-		int32	i, arrayStart;
-
-		appendBinaryStringInfo(buf, (char*)&item->array.nelems, sizeof(item->array.nelems));
-		arrayStart = buf->len;
-
-		/* elog(INFO, "serialize array %d elems", item->array.nelems); */
-		/* reserve place for "pointers" to array's elements */
-		for(i=0; i < item->array.nelems; i++)
-			appendBinaryStringInfo(buf, (char*)&i /* fake value */, sizeof(i));
-
-		for(i=0; i<item->array.nelems; i++)
-		{
-			chld = serializeFhirpathParseItem(buf, item->array.elems[i]);
-			*(int32*)(buf->data + arrayStart + i * sizeof(i)) = chld;
-		}
-	}
-		break;
 	case fpNull:
 		/* elog(INFO, "null"); */
 		break;
@@ -153,12 +133,6 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 	case fpString:
 		read_int32(v->value.datalen, base, pos);
 		v->value.data = base + pos;
-		break;
-	case fpPath:
-		read_int32(v->array.nelems, base, pos);
-		/* elog(INFO, "Init array: %d", v->array.nelems); */
-		v->array.current = 0;
-		v->array.arrayPtr = (int32*)(base + pos);
 		break;
 	case fpPipe:
 		read_int32(v->args.left, base, pos);
@@ -260,7 +234,6 @@ void
 printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 {
 	FhirpathItem	elem;
-	bool first = true;
 
 	check_stack_depth();
 
@@ -270,6 +243,8 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		break;
 	case fpKey:
 		/* elog(INFO, "print fpKey %s", fpGetString(v, NULL)); */
+		if (inKey)
+		  appendStringInfoChar(buf, '.');
 		appendStringInfoString(buf, fpGetString(v, NULL));
 		break;
 	case fpString:
@@ -277,20 +252,6 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		/* escape_json(buf, fpGetString(v, NULL)); */
 		/* appendStringInfoString(buf, fpGetString(v, NULL)); */
 		break;
-	case fpPath:
-		/* elog(INFO, "print array"); */
-		while(fpIterateArray(v, &elem))
-		{
-			/* elog(INFO, "array next"); */
-			if (first == false)
-				appendStringInfoChar(buf, '.');
-			else
-				first = false;
-
-			printFhirpathItem(buf, &elem, false);
-		}
-		break;
-
 	case fpPipe:
 		fpGetLeftArg(v, &elem);
 		printFhirpathItem(buf, &elem, false);
