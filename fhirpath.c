@@ -73,13 +73,27 @@ fhirpath_out(PG_FUNCTION_ARGS)
 }
 
 
+JsonbValue
+*getKey(char *key, JsonbValue *jbv){
+	JsonbValue	key_v;
+	key_v.type = jbvString;
+	key_v.val.string.len = strlen(key);
+	key_v.val.string.val = key;
+
+	if(jbv->type == jbvBinary){
+		return findJsonbValueFromContainer((JsonbContainer *) jbv->val.binary.data , JB_FOBJECT, &key_v);
+	} else {
+		return NULL;
+	}
+}
+
+
 void
 *recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
 {
 
 	char *key;
 
-	JsonbValue	key_v;
 	JsonbValue *next_v = NULL;
 	FhirpathItem next_item;
 
@@ -101,23 +115,20 @@ void
 
 		break;
 	case fpResourceType:
-		if (fpGetNext(path_item, &next_item)) {
-			key = fpGetString(path_item, NULL);
-			elog(INFO, "resource type: %s", key);
-			recursive_fhirpath_extract(result, jbv, &next_item);
+		key = fpGetString(path_item, NULL);
+		next_v = getKey("resourceType", jbv);
+		/* elog(INFO, "fpResourceType: %s, %s",  key, next_v->val.string.val); */
+		if(next_v != NULL && next_v->type == jbvString && strcmp(key, next_v->val.string.val) == 0){
+			if (fpGetNext(path_item, &next_item)) {
+				key = fpGetString(path_item, NULL);
+				/* elog(INFO, "resource type: %s", key); */
+				recursive_fhirpath_extract(result, jbv, &next_item);
+			}
 		}
 		break;
 	case fpKey:
 		key = fpGetString(path_item, NULL);
-		/* elog(INFO, "get key: %s", key); */
-
-		key_v.type = jbvString;
-		key_v.val.string.len = strlen(key);
-		key_v.val.string.val = key;
-
-		if(jbv->type == jbvBinary){
-		  next_v = findJsonbValueFromContainer((JsonbContainer *) jbv->val.binary.data , JB_FOBJECT, &key_v);
-		}
+		next_v = getKey(key, jbv);
 
 		/* elog(INFO, "got key: %s, %d", key, next_v); *\/ */
 
