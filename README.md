@@ -1,8 +1,9 @@
 # fhirpath
 
+[![Build Status](https://travis-ci.org/niquola/fhirpath-pg.svg?branch=master)](https://travis-ci.org/niquola/fhirpath-pg)
+
 
 Native implementation of Fhirpath/Fluentpath for postgresql.
-
 
 
 ## Development
@@ -27,8 +28,7 @@ git clone https://github.com/niquola/fhirpath-pg
 cd fhirpath-pg
 ..postgres/src/tools/make_etags .
 
-make && sudo make install \
-&& psql test -c "drop extension if exists fhirpath; create extension fhirpath; select 'Patient.name.given'::fhirpath"
+make && sudo make install  && make installcheck
 
 tail -f /tmp/pg.log
 ````

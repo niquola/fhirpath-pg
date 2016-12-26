@@ -1,9 +1,14 @@
 --db:test -e
 --{{{
-
 DROP EXTENSION IF EXISTS fhirpath;
 NOTICE:  extension "fhirpath" does not exist, skipping
 CREATE EXTENSION fhirpath;
+SELECT 'Patient.name.given'::fhirpath as fhirpath;
+      fhirpath      
+--------------------
+ Patient.name.given
+(1 row)
+
 SELECT fhirpath_extract('{"a":"1", "b":{"c":"2", "d": [1,2,{"x":100}], "e":{"f": 4}}}', 'b.e.f');
  fhirpath_extract 
 ------------------
