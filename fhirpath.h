@@ -6,6 +6,7 @@
 #include "utils/numeric.h"
 #include "utils/jsonb.h"
 
+/* fhirpath datum */
 typedef struct
 {
 	int32	vl_len_;	/* varlena header (do not touch directly!) */
@@ -16,16 +17,16 @@ typedef struct
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
 
 typedef enum FhirpathItemType {
-	fpPath,
 	fpPipe,
 	fpKey,
+	fpResourceType,
 	fpString,
-	fpNull,
-	fpNode
+	fpNull
 } FhirpathItemType;
 
 typedef struct FhirpathParseItem FhirpathParseItem;
 
+/* in memory representation parse tree of fhirpath */
 struct FhirpathParseItem {
 	FhirpathItemType	type;
 	FhirpathParseItem	*next; /* next in path */
@@ -53,6 +54,7 @@ struct FhirpathParseItem {
 	};
 };
 
+/* on disk representation of fhirpath */
 typedef struct FhirpathItem {
 	FhirpathItemType	type;
 	int32			nextPos;
@@ -81,6 +83,7 @@ typedef struct FhirpathItem {
 
 extern FhirpathParseItem* parsefhirpath(const char *str, int len);
 
+/* utils to convert on disk to inmemory representation */
 extern void fpInit(FhirpathItem *v, Fhirpath *js);
 extern void fpInitByBuffer(FhirpathItem *v, char *base, int32 pos);
 extern bool fpGetNext(FhirpathItem *v, FhirpathItem *a);
@@ -93,11 +96,13 @@ extern int32	fpGetIsType(FhirpathItem *v);
 extern char * fpGetString(FhirpathItem *v, int32 *len);
 extern void fpIterateInit(FhirpathItem *v);
 extern bool fpIterateArray(FhirpathItem *v, FhirpathItem *e);
+
 void alignStringInfoInt(StringInfo buf);
 
 extern int serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item);
 extern void printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey);
 
+/* copypaste from jsonb utils to build jsonb objects/arrays */
 typedef struct JsonbInState
 {
 	JsonbParseState *parseState;

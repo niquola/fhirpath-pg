@@ -13,6 +13,8 @@ PG_MODULE_MAGIC;
 
 void *recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jb, FhirpathItem *path_item);
 
+void initJsonbValue(JsonbValue *jbv, Jsonb *jb);
+
 
 PG_FUNCTION_INFO_V1(fhirpath_in);
 Datum
@@ -98,6 +100,13 @@ void
 		recursive_fhirpath_extract(result, jbv, &next_item);
 
 		break;
+	case fpResourceType:
+		if (fpGetNext(path_item, &next_item)) {
+			key = fpGetString(path_item, NULL);
+			elog(INFO, "resource type: %s", key);
+			recursive_fhirpath_extract(result, jbv, &next_item);
+		}
+		break;
 	case fpKey:
 		key = fpGetString(path_item, NULL);
 		/* elog(INFO, "get key: %s", key); */
@@ -148,6 +157,12 @@ void
 	return NULL;
 }
 
+void
+initJsonbValue(JsonbValue *jbv, Jsonb *jb) {
+	jbv->type = jbvBinary;
+	jbv->val.binary.data = &jb->root;
+	jbv->val.binary.len = VARSIZE_ANY_EXHDR(jb);
+}
 
 PG_FUNCTION_INFO_V1(fhirpath_extract);
 Datum
@@ -163,9 +178,7 @@ fhirpath_extract(PG_FUNCTION_ARGS)
 
 	/* init jsonbvalue from in disck */
 	JsonbValue	jbv;
-	jbv.type = jbvBinary;
-	jbv.val.binary.data = &jb->root;
-	jbv.val.binary.len = VARSIZE_ANY_EXHDR(jb);
+	initJsonbValue(&jbv, jb);
 
 	/* init accumulator */
 	JsonbInState result;

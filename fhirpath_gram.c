@@ -215,29 +215,42 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
  }
 
  static FhirpathParseItem*
-	 makeItemArray(FhirpathItemType tp, List *list)
+	 makeResourceType(string *s)
  {
-	 FhirpathParseItem	*v = makeItemType(tp);
-	 v->array.nelems = list_length(list);
-	 /* elog(INFO, "MakeItemArray: Path lenght %d", list_length(list)); */
+	 FhirpathParseItem *v;
 
-	 if (v->array.nelems > 0)
-	 {
-		 ListCell	*cell;
-		 int			i = 0;
-
-		 v->array.elems = palloc(sizeof(FhirpathParseItem) * v->array.nelems);
-
-		 foreach(cell, list)
-			 v->array.elems[i++] = (FhirpathParseItem*)lfirst(cell);
-	 }
-	 else
-	 {
-		 v->array.elems = NULL;
-	 }
+	 v = makeItemType(fpResourceType);
+	 v->string.val = s->val;
+	 v->string.len = s->len;
+	 /* elog(INFO, "makeString %s [%d]", s->val, s->len); */
 
 	 return v;
  }
+
+ /* static FhirpathParseItem* */
+ /* 	 makeItemArray(FhirpathItemType tp, List *list) */
+ /* { */
+ /* 	 FhirpathParseItem	*v = makeItemType(tp); */
+ /* 	 v->array.nelems = list_length(list); */
+ /* 	 /\* elog(INFO, "MakeItemArray: Path lenght %d", list_length(list)); *\/ */
+
+ /* 	 if (v->array.nelems > 0) */
+ /* 	 { */
+ /* 		 ListCell	*cell; */
+ /* 		 int			i = 0; */
+
+ /* 		 v->array.elems = palloc(sizeof(FhirpathParseItem) * v->array.nelems); */
+
+ /* 		 foreach(cell, list) */
+ /* 			 v->array.elems[i++] = (FhirpathParseItem*)lfirst(cell); */
+ /* 	 } */
+ /* 	 else */
+ /* 	 { */
+ /* 		 v->array.elems = NULL; */
+ /* 	 } */
+
+ /* 	 return v; */
+ /* } */
 
 
  static FhirpathParseItem*
@@ -275,7 +288,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 149 "fhirpath_gram.y"
+#line 162 "fhirpath_gram.y"
 {
 	string 				str;
 	List				*elems; /* list of FhirpathParseItem */
@@ -283,7 +296,7 @@ typedef union YYSTYPE
 	FhirpathParseItem	*value;
 }
 /* Line 193 of yacc.c.  */
-#line 287 "fhirpath_gram.c"
+#line 300 "fhirpath_gram.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -296,7 +309,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 300 "fhirpath_gram.c"
+#line 313 "fhirpath_gram.c"
 
 #ifdef short
 # undef short
@@ -509,18 +522,18 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  6
+#define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   5
+#define YYLAST   9
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  23
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  8
+#define YYNRULES  9
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  11
+#define YYNSTATES  15
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -567,20 +580,21 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     5,     6,     8,    12,    14,    16
+       0,     0,     3,     5,     6,     8,    12,    14,    17,    21
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
       24,     0,    -1,    25,    -1,    -1,    27,    -1,    25,    21,
-      27,    -1,    17,    -1,    26,    -1,    27,    22,    26,    -1
+      27,    -1,    17,    -1,    22,    26,    -1,    17,    22,    26,
+      -1,    27,    22,    26,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   178,   178,   179,   183,   184,   191,   195,   196
+       0,   191,   191,   192,   196,   197,   204,   208,   209,   210
 };
 #endif
 
@@ -610,13 +624,13 @@ static const yytype_uint16 yytoknum[] =
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    23,    24,    24,    25,    25,    26,    27,    27
+       0,    23,    24,    24,    25,    25,    26,    27,    27,    27
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     0,     1,     3,     1,     1,     3
+       0,     2,     1,     0,     1,     3,     1,     2,     3,     3
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -624,29 +638,29 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       3,     6,     0,     2,     7,     4,     1,     0,     0,     5,
-       8
+       3,     0,     0,     0,     2,     4,     0,     6,     7,     1,
+       0,     0,     8,     5,     9
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     4,     5
+      -1,     3,     4,     8,     5
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -20
+#define YYPACT_NINF -21
 static const yytype_int8 yypact[] =
 {
-     -17,   -20,     1,   -19,   -20,   -18,   -20,   -17,   -17,   -18,
-     -20
+     -17,   -20,   -14,     4,   -13,   -15,   -14,   -21,   -21,   -21,
+     -17,   -14,   -21,   -15,   -21
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -20,   -20,   -20,    -5,    -2
+     -21,   -21,   -21,    -5,    -1
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -656,20 +670,20 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       1,     6,     7,    10,     8,     9
+       1,    12,     6,     7,     9,     2,    14,    11,    10,    13
 };
 
 static const yytype_uint8 yycheck[] =
 {
-      17,     0,    21,     8,    22,     7
+      17,     6,    22,    17,     0,    22,    11,    22,    21,    10
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    17,    24,    25,    26,    27,     0,    21,    22,    27,
-      26
+       0,    17,    22,    24,    25,    27,    22,    17,    26,     0,
+      21,    22,    26,    27,    26
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1490,43 +1504,48 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 178 "fhirpath_gram.y"
+#line 191 "fhirpath_gram.y"
     { *result = (yyvsp[(1) - (1)].value); ;}
     break;
 
   case 3:
-#line 179 "fhirpath_gram.y"
+#line 192 "fhirpath_gram.y"
     { *result = NULL; ;}
     break;
 
   case 4:
-#line 183 "fhirpath_gram.y"
+#line 196 "fhirpath_gram.y"
     { (yyval.value) = makeItemList((yyvsp[(1) - (1)].elems)); ;}
     break;
 
   case 5:
-#line 184 "fhirpath_gram.y"
+#line 197 "fhirpath_gram.y"
     { (yyval.value) = makeItemOp(fpPipe, (yyvsp[(1) - (3)].value), makeItemList((yyvsp[(3) - (3)].elems))); ;}
     break;
 
   case 6:
-#line 191 "fhirpath_gram.y"
+#line 204 "fhirpath_gram.y"
     { (yyval.value) = makeItemKey(&(yyvsp[(1) - (1)].str)); ;}
     break;
 
   case 7:
-#line 195 "fhirpath_gram.y"
-    { (yyval.elems) = lappend(NIL, (yyvsp[(1) - (1)].value)); ;}
+#line 208 "fhirpath_gram.y"
+    { (yyval.elems) = lappend(NIL, (yyvsp[(2) - (2)].value)); ;}
     break;
 
   case 8:
-#line 196 "fhirpath_gram.y"
+#line 209 "fhirpath_gram.y"
+    { (yyval.elems) = lappend(lappend(NIL, makeResourceType(&(yyvsp[(1) - (3)].str))), (yyvsp[(3) - (3)].value)); ;}
+    break;
+
+  case 9:
+#line 210 "fhirpath_gram.y"
     { (yyval.elems) = lappend((yyvsp[(1) - (3)].elems), (yyvsp[(3) - (3)].value)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1530 "fhirpath_gram.c"
+#line 1549 "fhirpath_gram.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1740,7 +1759,7 @@ yyreturn:
 }
 
 
-#line 199 "fhirpath_gram.y"
+#line 213 "fhirpath_gram.y"
 
 
 #include "fhirpath_scan.c"

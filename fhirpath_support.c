@@ -66,6 +66,7 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 	break;
 	case fpKey:
 	case fpString:
+	case fpResourceType:
 		/* elog(INFO, "serialize key: %s [%d]", item->string.val, item->string.len); */
 		/* write length field*/
 		appendBinaryStringInfo(buf, (char*)&item->string.len, sizeof(item->string.len));
@@ -130,6 +131,7 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 	case fpNull:
 		break;
 	case fpKey:
+	case fpResourceType:
 	case fpString:
 		read_int32(v->value.datalen, base, pos);
 		v->value.data = base + pos;
@@ -243,8 +245,11 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		break;
 	case fpKey:
 		/* elog(INFO, "print fpKey %s", fpGetString(v, NULL)); */
-		if (inKey)
-		  appendStringInfoChar(buf, '.');
+		appendStringInfoChar(buf, '.');
+		appendStringInfoString(buf, fpGetString(v, NULL));
+		break;
+	case fpResourceType:
+		/* elog(INFO, "print fpKey %s", fpGetString(v, NULL)); */
 		appendStringInfoString(buf, fpGetString(v, NULL));
 		break;
 	case fpString:

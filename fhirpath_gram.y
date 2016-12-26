@@ -98,29 +98,42 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
  }
 
  static FhirpathParseItem*
-	 makeItemArray(FhirpathItemType tp, List *list)
+	 makeResourceType(string *s)
  {
-	 FhirpathParseItem	*v = makeItemType(tp);
-	 v->array.nelems = list_length(list);
-	 /* elog(INFO, "MakeItemArray: Path lenght %d", list_length(list)); */
+	 FhirpathParseItem *v;
 
-	 if (v->array.nelems > 0)
-	 {
-		 ListCell	*cell;
-		 int			i = 0;
-
-		 v->array.elems = palloc(sizeof(FhirpathParseItem) * v->array.nelems);
-
-		 foreach(cell, list)
-			 v->array.elems[i++] = (FhirpathParseItem*)lfirst(cell);
-	 }
-	 else
-	 {
-		 v->array.elems = NULL;
-	 }
+	 v = makeItemType(fpResourceType);
+	 v->string.val = s->val;
+	 v->string.len = s->len;
+	 /* elog(INFO, "makeString %s [%d]", s->val, s->len); */
 
 	 return v;
  }
+
+ /* static FhirpathParseItem* */
+ /* 	 makeItemArray(FhirpathItemType tp, List *list) */
+ /* { */
+ /* 	 FhirpathParseItem	*v = makeItemType(tp); */
+ /* 	 v->array.nelems = list_length(list); */
+ /* 	 /\* elog(INFO, "MakeItemArray: Path lenght %d", list_length(list)); *\/ */
+
+ /* 	 if (v->array.nelems > 0) */
+ /* 	 { */
+ /* 		 ListCell	*cell; */
+ /* 		 int			i = 0; */
+
+ /* 		 v->array.elems = palloc(sizeof(FhirpathParseItem) * v->array.nelems); */
+
+ /* 		 foreach(cell, list) */
+ /* 			 v->array.elems[i++] = (FhirpathParseItem*)lfirst(cell); */
+ /* 	 } */
+ /* 	 else */
+ /* 	 { */
+ /* 		 v->array.elems = NULL; */
+ /* 	 } */
+
+ /* 	 return v; */
+ /* } */
 
 
  static FhirpathParseItem*
@@ -192,7 +205,8 @@ key:
 	;
 
 path:
-	key								{ $$ = lappend(NIL, $1); }
+	'.' key							{ $$ = lappend(NIL, $2); }
+    | STRING_P '.' key    			{ $$ = lappend(lappend(NIL, makeResourceType(&$1)), $3); }
 	| path '.' key   				{ $$ = lappend($1, $3); }
 	;
 
