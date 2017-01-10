@@ -85,13 +85,21 @@ static JsonbValue
 	}
 }
 
+static bool
+checkScalarEquality(FhirpathItem *fpi,  JsonbValue *jb) {
+	if (jb->type == jbvString) {
+		return (fpi->value.datalen == jb->val.string.len
+				&& memcmp(jb->val.string.val, fpi->value.data, fpi->value.datalen) == 0);
+	}
+	return false;
+}
+
 
 static long
 recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *path_item)
 {
 
 	char *key;
-	char *valueToCompare;
 	long num_results = 0;
 
 	JsonbValue *next_v = NULL;
@@ -129,14 +137,16 @@ recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *
 	case fpEqual:
 		fpGetLeftArg(path_item, &next_item);
 		key = fpGetString(&next_item, NULL);
+		next_v = getKey(key, jbv);
 
 		fpGetRightArg(path_item, &next_item);
-		valueToCompare = fpGetString(&next_item, NULL);
-		next_v = getKey(key, jbv);
-		/* elog(INFO, "fpEqual: %s = %s, but %s", key, valueToCompare, next_v->val.string.val); */
-		if(next_v != NULL && next_v->type == jbvString && strcmp(valueToCompare, next_v->val.string.val) == 0){
+
+		if(next_v != NULL &&  checkScalarEquality(&next_item, next_v)){
 			if (fpGetNext(path_item, &next_item)) {
 				num_results = recursive_fhirpath_extract(result, jbv, &next_item);
+			} else {
+				result->res = pushJsonbValue(&result->parseState, WJB_ELEM, jbv);
+				num_results += 1;
 			}
 		}
 		break;
@@ -144,7 +154,7 @@ recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *
 		key = fpGetString(path_item, NULL);
 		next_v = getKey("resourceType", jbv);
 		/* elog(INFO, "fpResourceType: %s, %s",  key, next_v->val.string.val); */
-		if(next_v != NULL && next_v->type == jbvString && strcmp(key, next_v->val.string.val) == 0){
+		if(next_v != NULL && checkScalarEquality(path_item, next_v)){
 			if (fpGetNext(path_item, &next_item)) {
 				num_results = recursive_fhirpath_extract(result, jbv, &next_item);
 			}
@@ -156,7 +166,7 @@ recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *
 
 		/* elog(INFO, "got key: %s, %d", key, next_v); *\/ */
 
-		if (next_v != NULL && fpGetNext(path_item, &next_item)) {
+		if (next_v != NULL) {
 			/* elog(INFO, "type %d", next_v->type); */
 			if(next_v->type == jbvBinary){
 
@@ -167,23 +177,29 @@ recursive_fhirpath_extract(JsonbInState *result, JsonbValue *jbv, FhirpathItem *
 					/* elog(INFO, "We are in array"); */
 					while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
 						if(next_it == WJB_ELEM){
-							num_results += recursive_fhirpath_extract(result, &array_value, &next_item);
+							if(fpGetNext(path_item, &next_item)) {
+								num_results += recursive_fhirpath_extract(result, &array_value, &next_item);
+							} else {
+								result->res = pushJsonbValue(&result->parseState, WJB_ELEM, &array_value);
+								num_results += 1;
+							}
 						}
 					}
 				}
 				else if(next_it == WJB_BEGIN_OBJECT){
-					/* elog(INFO, "We are in object"); */
-					num_results += recursive_fhirpath_extract(result, next_v, &next_item);
+					if(fpGetNext(path_item, &next_item)) {
+						num_results += recursive_fhirpath_extract(result, next_v, &next_item);
+					} else {
+						result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
+						num_results += 1;
+
+					}
 				}
+			} else {
+				result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
+				num_results += 1;
 			}
 
-		} else if (next_v != NULL) {
-			/* elog(INFO, "append v %d", next_v->type); */
-			/* Jsonb *out = JsonbValueToJsonb(next_v); */
-			/* elog(INFO, "Add to result: %s", JsonbToCString(NULL, &out->root, 0)); */
-			/* elog(INFO, "Type: %d", next_v->type); */
-			result->res = pushJsonbValue(&result->parseState, WJB_ELEM, next_v);
-			num_results += 1;
 		}
 		break;
 	default:
@@ -231,4 +247,60 @@ fhirpath_extract(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
+}
+
+static long
+recursive_fhirpath_values(JsonbInState *result, JsonbValue *jbv)
+{
+
+	JsonbIterator *array_it;
+	JsonbValue	array_value;
+	int num_results = 0;
+	int next_it;
+
+	if(jbv->type == jbvBinary) {
+
+		array_it = JsonbIteratorInit((JsonbContainer *) jbv->val.binary.data);
+		next_it = JsonbIteratorNext(&array_it, &array_value, true);
+
+		if(next_it == WJB_BEGIN_ARRAY || next_it == WJB_BEGIN_OBJECT){
+			while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
+				if(next_it == WJB_ELEM || next_it == WJB_VALUE){
+					num_results += recursive_fhirpath_values(result, &array_value);
+				}
+			}
+		}
+	} else {
+		result->res = pushJsonbValue(&result->parseState, WJB_ELEM, jbv);
+		num_results += 1;
+	}
+
+	return num_results;
+}
+
+
+PG_FUNCTION_INFO_V1(fhirpath_values);
+Datum
+fhirpath_values(PG_FUNCTION_ARGS)
+{
+
+	Jsonb       *jb = PG_GETARG_JSONB(0);
+
+	/* init jsonbvalue from in disck */
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	/* init accumulator */
+	JsonbInState result;
+	memset(&result, 0, sizeof(JsonbInState));
+	result.res = pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
+
+	long num_results = recursive_fhirpath_values(&result, &jbv);
+
+	result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
+	if(num_results > 0){
+		PG_RETURN_POINTER(JsonbValueToJsonb(result.res));
+	} else {
+		PG_RETURN_NULL();
+	}
 }

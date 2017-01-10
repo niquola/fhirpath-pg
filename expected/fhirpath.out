@@ -69,20 +69,29 @@ SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', '.b.c');
  [1, 2]
 (1 row)
 
-SELECT fhirpath_extract(
-  '{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
-  ,'Patient.name.where(use=official).family');
+\set pt $JSON${"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}$JSON$
+SELECT fhirpath_extract(:pt,'Patient.name.where(use=official).family');
  fhirpath_extract 
 ------------------
- [["ivanov"]]
+ ["ivanov"]
 (1 row)
 
-SELECT fhirpath_extract(
-'{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
-,'Patient.name.where(use="common").family');
+SELECT fhirpath_extract(:pt,'Patient.name.where(use="common").family');
  fhirpath_extract 
 ------------------
- [["petrov"]]
+ ["petrov"]
+(1 row)
+
+SELECT fhirpath_extract(:pt,'Patient.name.where(use="common")');
+             fhirpath_extract              
+-------------------------------------------
+ [{"use": "common", "family": ["petrov"]}]
+(1 row)
+
+SELECT fhirpath_extract(:pt,'Patient.name.family');
+   fhirpath_extract   
+----------------------
+ ["ivanov", "petrov"]
 (1 row)
 
 SELECT '.name OR .alias'::fhirpath as fhirpath;
@@ -101,6 +110,12 @@ SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
  fhirpath_extract 
 ------------------
  [2]
+(1 row)
+
+SELECT fhirpath_values(:pt);
+                    fhirpath_values                    
+-------------------------------------------------------
+ ["official", "ivanov", "common", "petrov", "Patient"]
 (1 row)
 
 --}}}

@@ -25,18 +25,23 @@ SELECT fhirpath_extract('{}', '.unexisting');
 
 SELECT fhirpath_extract('{"b":[{"c":1},{"c":2},{"x":"ups"}]}', '.b.c');
 
-SELECT fhirpath_extract(
-  '{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
-  ,'Patient.name.where(use=official).family');
+\set pt $JSON${"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}$JSON$
 
-SELECT fhirpath_extract(
-'{"resourceType":"Patient", "name": [{"use": "official", "family": ["ivanov"]}, {"use": "common", "family": ["petrov"]}]}'
-,'Patient.name.where(use="common").family');
+SELECT fhirpath_extract(:pt,'Patient.name.where(use=official).family');
+
+SELECT fhirpath_extract(:pt,'Patient.name.where(use="common").family');
+
+SELECT fhirpath_extract(:pt,'Patient.name.where(use="common")');
+
+SELECT fhirpath_extract(:pt,'Patient.name.family');
+
 
 SELECT '.name OR .alias'::fhirpath as fhirpath;
 
 SELECT fhirpath_extract('{"b":1, "c":2}', '.b OR .c');
 
 SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
+
+SELECT fhirpath_values(:pt);
 
 --}}}
