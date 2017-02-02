@@ -1,6 +1,6 @@
 drop table if exists as_token_test;
+NOTICE:  table "as_token_test" does not exist, skipping
 create table as_token_test (resource jsonb);
-
 insert into as_token_test (resource) values (
 $$
 {
@@ -51,14 +51,63 @@ $$
 }
 $$
 );
-
 SELECT fhirpath_as_token(resource, '.identifier', 'Identifier') from as_token_test;
+                 fhirpath_as_token                 
+---------------------------------------------------
+ {value1,isys,isys|value1,ival2,isys2,isys2|ival2}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.telecom', 'ContactPoint') from as_token_test;
+                                   fhirpath_as_token                                   
+---------------------------------------------------------------------------------------
+ {"(03) 5555 6473",phone,"phone|(03) 5555 6473",ivan@mail.ru,email,email|ivan@mail.ru}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.telecom.value', 'string') from as_token_test;
+        fhirpath_as_token        
+---------------------------------
+ {"(03) 5555 6473",ivan@mail.ru}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.telecom.use', 'code') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {work,home}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.telecom.use', 'uri') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {work,home}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.telecom.use', 'string') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {work,home}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.identifier.type.coding', 'Coding') from as_token_test;
+                            fhirpath_as_token                            
+-------------------------------------------------------------------------
+ {code1,sys1,sys1|code1,code2,sys2,sys2|code2,itcode,itsys,itsys|itcode}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.organization', 'Reference') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {Organization/1}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.quantity', 'Quantity') from as_token_test;
+             fhirpath_as_token              
+--------------------------------------------
+ {code,unit,system,system|code,system|unit}
+(1 row)
+
 SELECT fhirpath_as_token(resource, '.identifier.type', 'CodeableConcept') from as_token_test;
+                            fhirpath_as_token                            
+-------------------------------------------------------------------------
+ {code1,sys1,sys1|code1,code2,sys2,sys2|code2,itcode,itsys,itsys|itcode}
+(1 row)
+

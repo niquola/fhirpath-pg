@@ -16,8 +16,15 @@ void initJsonbValue(JsonbValue *jbv, Jsonb *jb);
 
 void appendJsonbValuePrimitives(StringInfoData *buf, JsonbValue *jbv, char *prefix, char *suffix, char *delim);
 
-static long do_fhirpath_extract(JsonbInState *result, Jsonb *jb, Fhirpath *fp_in);
-static text *JsonbValueToText(JsonbValue *v);
+static char *jsonbv_to_string(StringInfoData *out, JsonbValue *v);
+typedef void (*reduce_fn)(void *acc, JsonbValue *val);
+static void reduce_jsonb_array(JsonbValue *arr, void *acc, reduce_fn fn);
+static void reduce_jsonb(void *buf, JsonbValue *val);
+static void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn);
+static void reduce_as_string_values(void *acc, JsonbValue *val);
+static void reduce_as_string(void *acc, JsonbValue *val);
+static text *get_text_key(JsonbValue *val, char *key);
+static void reduce_as_token(void *acc, JsonbValue *val);
 
 PG_FUNCTION_INFO_V1(fhirpath_in);
 Datum
@@ -94,29 +101,6 @@ checkScalarEquality(FhirpathItem *fpi,  JsonbValue *jb) {
 	return false;
 }
 
-typedef void (*reduce_fn)(void *acc, JsonbValue *val);
-
-void
-appendJsonbValue(JsonbValue *jbval, void *acc, reduce_fn fn)
-{
-	JsonbIterator *it;
-	JsonbValue	v;
-	JsonbIteratorToken tok;
-
-	/* elog(INFO, "Append!, %d", jbval->type == jbvArray); */
-	/* elog(INFO, "Append: %s",text_to_cstring(JsonbValueToText(jbval))); */
-
-	if (jbval != NULL) // && (jbval->type != jbvArray || jbval->type == jbvObject)
-	{
-		fn(acc, jbval);
-	}
-
-	/* /\* unpack the binary and add each piece to the pstate *\/ */
-	/* it = JsonbIteratorInit(jbval->val.binary.data); */
-	/* while ((tok = JsonbIteratorNext(&it, &v, false)) != WJB_DONE) */
-	/* 	fn(acc, &v); */
-
-}
 
 /* this function convert JsonbValue to string, */
 /* StringInfoData out buffer is optional */
@@ -152,7 +136,30 @@ char *jsonbv_to_string(StringInfoData *out, JsonbValue *v){
 	return out->data;
 }
 
+void
+reduce_jsonb_array(JsonbValue *arr, void *acc, reduce_fn fn) {
 
+	/* elog(INFO, "reduce array %s", jsonbv_to_string(NULL, arr)); */
+
+	JsonbIterator *iter;
+	JsonbValue	item;
+	int next_it;
+
+	if (arr != NULL && arr->type == jbvBinary){
+
+		iter = JsonbIteratorInit((JsonbContainer *) arr->val.binary.data);
+		next_it = JsonbIteratorNext(&iter, &item, true);
+
+		if(next_it == WJB_BEGIN_ARRAY){
+			while ((next_it = JsonbIteratorNext(&iter, &item, true)) != WJB_DONE){
+				if(next_it == WJB_ELEM){
+					fn(acc, &item);
+				}
+			}
+		}
+	}
+
+}
 
 static long
 reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn fn)
@@ -224,7 +231,6 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		key = fpGetString(path_item, NULL);
 		next_v = jsonb_get_key(key, jbv);
 
-		/* elog(INFO, "got key: %s, %d", key, next_v); */
 
 		if (next_v != NULL) {
 			/* elog(INFO, "type %d", next_v->type); */
@@ -240,23 +246,24 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 							if(fpGetNext(path_item, &next_item)) {
 								num_results += reduce_fhirpath(&array_value, &next_item, acc, fn);
 							} else {
-								appendJsonbValue(&array_value, acc, fn);
+								fn(acc, &array_value);
 								num_results += 1;
 							}
 						}
 					}
 				}
 				else if(next_it == WJB_BEGIN_OBJECT){
+					/* elog(INFO, "We are in object"); */
 					if(fpGetNext(path_item, &next_item)) {
 						num_results += reduce_fhirpath(next_v, &next_item, acc, fn);
-					} else {
-						appendJsonbValue(&array_value, acc, fn);
+					} else if (next_v != NULL){
+						fn(acc, next_v);
 						num_results += 1;
 
 					}
 				}
-			} else {
-				appendJsonbValue(next_v, acc, fn);
+			} else if (next_v != NULL ){
+				fn(acc, next_v);
 				num_results += 1;
 			}
 
@@ -364,38 +371,6 @@ appendJsonbValuePrimitives(StringInfoData *buf, JsonbValue *jbv, char *prefix, c
 	}
 }
 
-text *JsonbValueToText(JsonbValue *v){
-	switch(v->type)
-	{
-    case jbvNull:
-		return cstring_to_text(""); // better pg null?
-		break;
-    case jbvBool:
-		return cstring_to_text(v->val.boolean ? "true" : "false");
-		break;
-    case jbvString:
-		return cstring_to_text_with_len(v->val.string.val, v->val.string.len);
-		break;
-    case jbvNumeric:
-		return cstring_to_text(DatumGetCString(DirectFunctionCall1(numeric_out,
-																   PointerGetDatum(v->val.numeric))));
-		break;
-    case jbvBinary:
-    case jbvArray:
-    case jbvObject:
-	{
-        StringInfo  jtext = makeStringInfo();
-        (void) JsonbToCString(jtext, v->val.binary.data, -1);
-        return cstring_to_text_with_len(jtext->data, jtext->len);
-	}
-	break;
-    default:
-		elog(ERROR, "Wrong jsonb type: %d", v->type);
-	}
-	return NULL;
-}
-
-
 
 void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn) {
 
@@ -476,44 +451,114 @@ typedef struct TokenAccumulator {
 	ArrayBuildState *acc;
 } TokenAccumulator;
 
+text *
+get_text_key(JsonbValue *val, char *key) {
+	JsonbValue *value = jsonb_get_key(key, val);
+
+	if(value!=NULL && value->type == jbvString)
+		return cstring_to_text_with_len(value->val.string.val, value->val.string.len);
+	else
+		return NULL;
+}
+
+
+static void
+appendStringInfoText(StringInfo str, const text *t)
+{
+	appendBinaryStringInfo(str, VARDATA_ANY(t), VARSIZE_ANY_EXHDR(t));
+}
+
+static void
+append_token(TokenAccumulator *acc, text *token) {
+	if( token != NULL )
+		acc->acc = accumArrayResult(acc->acc, (Datum)token, false, TEXTOID, CurrentMemoryContext);
+}
+
+static void
+append_token_pair(TokenAccumulator *tacc, text *a, text *b) {
+
+	if( a != NULL && b != NULL){
+		StringInfoData		buf;
+		initStringInfo(&buf);
+		appendStringInfoSpaces(&buf, VARHDRSZ);
+		appendStringInfoText(&buf, a);
+		appendStringInfoString(&buf, "|");
+		appendStringInfoText(&buf, b);
+
+		SET_VARSIZE(buf.data, buf.len);
+		append_token(tacc,  (text *)buf.data);
+	}
+
+}
+
+
+
 void reduce_as_token(void *acc, JsonbValue *val){
 	TokenAccumulator *tacc = (TokenAccumulator *) acc;
-	JsonbValue *system;
-	JsonbValue *value;
 
-	if(strcmp(tacc->element_type, "Identifier") == 0){
+	/* elog(INFO, "reduce token [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
 
-		value = jsonb_get_key("value", val);
+	if(strcmp(tacc->element_type, "Identifier") == 0 ||
+	   strcmp(tacc->element_type, "ContactPoint") == 0 ){
 
-		if(value!=NULL)
-			tacc->acc = accumArrayResult(tacc->acc,
-										 cstring_to_text_with_len(value->val.string.val, value->val.string.len),
-										 false, TEXTOID, CurrentMemoryContext);
+		text *value = get_text_key(val, "value");
+		append_token(tacc,  value);
+		text *system = get_text_key(val, "system");
+		append_token(tacc,  system);
 
-		system = jsonb_get_key("system", val);
+		append_token_pair(tacc, system, value);
 
-		if(system!=NULL)
-			tacc->acc = accumArrayResult(tacc->acc,
-										 cstring_to_text_with_len(system->val.string.val, system->val.string.len),
-										 false, TEXTOID, CurrentMemoryContext);
+	} else if (strcmp(tacc->element_type, "code") == 0 || strcmp(tacc->element_type, "string") == 0 || strcmp(tacc->element_type, "uri") == 0) {
+		if(val!=NULL && val->type == jbvString)
+		  append_token(tacc,  cstring_to_text_with_len(val->val.string.val, val->val.string.len));
 
-		if( system != NULL && value != NULL){
-			StringInfoData		buf;
-			initStringInfo(&buf);
-			appendStringInfoSpaces(&buf, VARHDRSZ);
-			appendBinaryStringInfo(&buf, value->val.string.val, value->val.string.len);
-			appendStringInfoString(&buf, "|");
-			appendBinaryStringInfo(&buf, system->val.string.val, system->val.string.len);
+	} else if (strcmp(tacc->element_type, "Coding") == 0) {
+		text *code = get_text_key(val, "code");
+		append_token(tacc, code);
+		text *system = get_text_key(val, "system");
+		append_token(tacc, system);
 
-			SET_VARSIZE(buf.data, buf.len);
-			tacc->acc = accumArrayResult(tacc->acc, buf.data, false, TEXTOID, CurrentMemoryContext);
+		append_token_pair(tacc, system, code);
+
+	} else if (strcmp(tacc->element_type, "CodeableConcept") == 0) {
+
+		JsonbValue *codings = jsonb_get_key("coding", val);
+
+		if(codings != NULL) {
+
+			/* we have to change element type */
+			TokenAccumulator tmpacc;
+			tmpacc.element_type = "Coding";
+			tmpacc.acc = tacc->acc;
+			reduce_jsonb_array(codings, &tmpacc, reduce_as_token);
+			tacc->acc = tmpacc.acc;
 
 		}
+
+
+	} else if (strcmp(tacc->element_type, "Quantity") == 0) {
+
+		/* elog(INFO, "quantity %s", jsonbv_to_string(NULL, val)); */
+
+		text *code = get_text_key(val, "code");
+		append_token(tacc, code);
+		text *unit = get_text_key(val, "unit");
+		append_token(tacc, unit);
+		text *system = get_text_key(val, "system");
+		append_token(tacc, system);
+
+		append_token_pair(tacc, system, code);
+		append_token_pair(tacc, system, unit);
+
+	} else if (strcmp(tacc->element_type, "Reference") == 0) {
+
+		/* elog(INFO, "ref %s", jsonbv_to_string(NULL, val)); */
+		text *ref = get_text_key(val, "reference");
+		append_token(tacc, ref);
 
 	} else {
 		elog(ERROR, "Unknown datatype %s", tacc->element_type);
 	}
-	elog(INFO, "reduce token [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val));
 }
 
 PG_FUNCTION_INFO_V1(fhirpath_as_token);
@@ -536,7 +581,6 @@ fhirpath_as_token(PG_FUNCTION_ARGS) {
 	TokenAccumulator acc;
 	acc.element_type = type;
 	acc.acc = NULL;
-	elog(INFO, "accumulated");
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_token);
 
