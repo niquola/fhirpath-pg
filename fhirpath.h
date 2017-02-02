@@ -23,6 +23,7 @@ typedef enum FhirpathItemType {
 	fpEqual,
 	fpResourceType,
 	fpString,
+	fpValues,
 	fpNull
 } FhirpathItemType;
 

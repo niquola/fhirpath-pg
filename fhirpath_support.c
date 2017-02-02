@@ -66,6 +66,8 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 		*(int32*)(buf->data + right) = chld;
 	}
 	break;
+	case fpValues:
+		break;
 	case fpKey:
 	case fpString:
 	case fpResourceType:
@@ -131,6 +133,8 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 	switch(v->type)
 	{
 	case fpNull:
+		break;
+	case fpValues:
 		break;
 	case fpKey:
 	case fpResourceType:
@@ -283,6 +287,9 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		fpGetRightArg(v, &elem);
 		appendStringInfoString(buf, fpGetString(&elem, NULL));
 		appendStringInfoString(buf, ")");
+		break;
+	case fpValues:
+		appendStringInfoString(buf, ".vals()");
 		break;
 	default:
 		elog(ERROR, "Print: unknown type: %d", v->type);

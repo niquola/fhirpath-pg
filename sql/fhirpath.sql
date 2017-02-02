@@ -1,5 +1,5 @@
---db:test -e
---{{{
+-- --db:test -e
+-- --{{{
 DROP EXTENSION IF EXISTS fhirpath;
 CREATE EXTENSION fhirpath;
 
@@ -35,13 +35,22 @@ SELECT fhirpath_extract(:pt,'Patient.name.where(use="common")');
 
 SELECT fhirpath_extract(:pt,'Patient.name.family');
 
-
 SELECT '.name OR .alias'::fhirpath as fhirpath;
 
 SELECT fhirpath_extract('{"b":1, "c":2}', '.b OR .c');
 
 SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
 
-SELECT fhirpath_values(:pt);
+-- SELECT fhirpath_extract(:pt, '.name.family.vals()');
 
---}}}
+-- SELECT fhirpath_values(:pt);
+
+-- -- create table if not exists Patient (resource jsonb);
+-- -- delete from Patient;
+-- -- insert into Patient (resource) values (:pt);
+-- -- SELECT fhirpath_as_string(:pt, '.name', 'HumanName');
+-- -- SELECT Patient.*
+-- -- FROM Patient
+-- -- WHERE fhirpath_as_string('HumanName', fhirpath(resource, 'Patient.name')) ilike '%ivan%' LIMIT 10 OFFSET 0;
+
+-- --}}}

@@ -57,9 +57,7 @@ static void appendElement(JsonbParseState *pstate, JsonbValue *scalarVal);
 static int	lengthCompareJsonbStringValue(const void *a, const void *b);
 static int	lengthCompareJsonbPair(const void *a, const void *b, void *arg);
 static void uniqueifyJsonbObject(JsonbValue *object);
-static JsonbValue *pushJsonbValueScalar(JsonbParseState **pstate,
-					 JsonbIteratorToken seq,
-					 JsonbValue *scalarVal);
+JsonbValue *pushJsonbValueScalar(JsonbParseState **pstate, JsonbIteratorToken seq, JsonbValue *scalarVal);
 
 /*
  * Turn an in-memory JsonbValue into a Jsonb for on-disk storage.
@@ -68,6 +66,7 @@ static JsonbValue *pushJsonbValueScalar(JsonbParseState **pstate,
  * convenient to directly iterate through the Jsonb representation and only
  * really convert nested scalar values.  JsonbIteratorNext() does this, so that
  * clients of the iteration code don't have to directly deal with the binary
+ fn(acc, next_v);
  * representation (JsonbDeepContains() is a notable exception, although all
  * exceptions are internal to this module).  In general, functions that accept
  * a JsonbValue argument are concerned with the manipulation of scalar values,
@@ -537,11 +536,12 @@ pushJsonbValue(JsonbParseState **pstate, JsonbIteratorToken seq,
 	return res;
 }
 
+
 /*
  * Do the actual pushing, with only scalar or pseudo-scalar-array values
  * accepted.
  */
-static JsonbValue *
+JsonbValue *
 pushJsonbValueScalar(JsonbParseState **pstate, JsonbIteratorToken seq,
 					 JsonbValue *scalarVal)
 {
