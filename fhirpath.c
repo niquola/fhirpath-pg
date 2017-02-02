@@ -5,6 +5,7 @@
 #include "utils/builtins.h"
 #include "utils/json.h"
 #include "fhirpath.h"
+#include "catalog/pg_type.h"
 #include "utils/jsonb.h"
 
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
@@ -15,7 +16,6 @@ void initJsonbValue(JsonbValue *jbv, Jsonb *jb);
 
 void appendJsonbValuePrimitives(StringInfoData *buf, JsonbValue *jbv, char *prefix, char *suffix, char *delim);
 
-static long recursive_fhirpath_values(JsonbInState *result, JsonbValue *jbv);
 static long do_fhirpath_extract(JsonbInState *result, Jsonb *jb, Fhirpath *fp_in);
 static text *JsonbValueToText(JsonbValue *v);
 
@@ -72,7 +72,7 @@ fhirpath_out(PG_FUNCTION_ARGS)
 
 
 static JsonbValue
-*getKey(char *key, JsonbValue *jbv){
+*jsonb_get_key(char *key, JsonbValue *jbv){
 	JsonbValue	key_v;
 	key_v.type = jbvString;
 	key_v.val.string.len = strlen(key);
@@ -197,7 +197,7 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 	case fpEqual:
 		fpGetLeftArg(path_item, &next_item);
 		key = fpGetString(&next_item, NULL);
-		next_v = getKey(key, jbv);
+		next_v = jsonb_get_key(key, jbv);
 
 		fpGetRightArg(path_item, &next_item);
 
@@ -212,7 +212,7 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		break;
 	case fpResourceType:
 		key = fpGetString(path_item, NULL);
-		next_v = getKey("resourceType", jbv);
+		next_v = jsonb_get_key("resourceType", jbv);
 		/* elog(INFO, "fpResourceType: %s, %s",  key, next_v->val.string.val); */
 		if(next_v != NULL && checkScalarEquality(path_item, next_v)){
 			if (fpGetNext(path_item, &next_item)) {
@@ -222,7 +222,7 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		break;
 	case fpKey:
 		key = fpGetString(path_item, NULL);
-		next_v = getKey(key, jbv);
+		next_v = jsonb_get_key(key, jbv);
 
 		/* elog(INFO, "got key: %s, %d", key, next_v); */
 
@@ -322,61 +322,6 @@ fhirpath_extract(PG_FUNCTION_ARGS)
 
 }
 
-static long
-recursive_fhirpath_values(JsonbInState *result, JsonbValue *jbv)
-{
-
-	JsonbIterator *array_it;
-	JsonbValue	array_value;
-	int num_results = 0;
-	int next_it;
-
-	if(jbv->type == jbvBinary) {
-
-		array_it = JsonbIteratorInit((JsonbContainer *) jbv->val.binary.data);
-		next_it = JsonbIteratorNext(&array_it, &array_value, true);
-
-		if(next_it == WJB_BEGIN_ARRAY || next_it == WJB_BEGIN_OBJECT){
-			while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
-				if(next_it == WJB_ELEM || next_it == WJB_VALUE){
-					num_results += recursive_fhirpath_values(result, &array_value);
-				}
-			}
-		}
-	} else {
-		result->res = pushJsonbValue(&result->parseState, WJB_ELEM, jbv);
-		num_results += 1;
-	}
-
-	return num_results;
-}
-
-
-PG_FUNCTION_INFO_V1(fhirpath_values);
-Datum
-fhirpath_values(PG_FUNCTION_ARGS)
-{
-
-	Jsonb       *jb = PG_GETARG_JSONB(0);
-
-	/* init jsonbvalue from in disck */
-	JsonbValue	jbv;
-	initJsonbValue(&jbv, jb);
-
-	/* init accumulator */
-	JsonbInState result;
-	memset(&result, 0, sizeof(JsonbInState));
-	result.res = pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
-
-	long num_results = recursive_fhirpath_values(&result, &jbv);
-
-	result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
-	if(num_results > 0){
-		PG_RETURN_POINTER(JsonbValueToJsonb(result.res));
-	} else {
-		PG_RETURN_NULL();
-	}
-}
 
 void
 appendJsonbValuePrimitives(StringInfoData *buf, JsonbValue *jbv, char *prefix, char *suffix, char *delim){
@@ -452,8 +397,7 @@ text *JsonbValueToText(JsonbValue *v){
 
 
 
-void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn)
-{
+void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn) {
 
 	JsonbIterator *array_it;
 	JsonbValue	array_value;
@@ -493,8 +437,8 @@ void reduce_as_string(void *acc, JsonbValue *val){
 
 PG_FUNCTION_INFO_V1(fhirpath_as_string);
 Datum
-fhirpath_as_string(PG_FUNCTION_ARGS)
-{
+fhirpath_as_string(PG_FUNCTION_ARGS) {
+
 	Jsonb      *jb = PG_GETARG_JSONB(0);
 	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
 	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
@@ -525,5 +469,79 @@ fhirpath_as_string(PG_FUNCTION_ARGS)
 	} else {
 		PG_RETURN_NULL();
 	}
+}
 
+typedef struct TokenAccumulator {
+	char	*element_type;
+	ArrayBuildState *acc;
+} TokenAccumulator;
+
+void reduce_as_token(void *acc, JsonbValue *val){
+	TokenAccumulator *tacc = (TokenAccumulator *) acc;
+	JsonbValue *system;
+	JsonbValue *value;
+
+	if(strcmp(tacc->element_type, "Identifier") == 0){
+
+		value = jsonb_get_key("value", val);
+
+		if(value!=NULL)
+			tacc->acc = accumArrayResult(tacc->acc,
+										 cstring_to_text_with_len(value->val.string.val, value->val.string.len),
+										 false, TEXTOID, CurrentMemoryContext);
+
+		system = jsonb_get_key("system", val);
+
+		if(system!=NULL)
+			tacc->acc = accumArrayResult(tacc->acc,
+										 cstring_to_text_with_len(system->val.string.val, system->val.string.len),
+										 false, TEXTOID, CurrentMemoryContext);
+
+		if( system != NULL && value != NULL){
+			StringInfoData		buf;
+			initStringInfo(&buf);
+			appendStringInfoSpaces(&buf, VARHDRSZ);
+			appendBinaryStringInfo(&buf, value->val.string.val, value->val.string.len);
+			appendStringInfoString(&buf, "|");
+			appendBinaryStringInfo(&buf, system->val.string.val, system->val.string.len);
+
+			SET_VARSIZE(buf.data, buf.len);
+			tacc->acc = accumArrayResult(tacc->acc, buf.data, false, TEXTOID, CurrentMemoryContext);
+
+		}
+
+	} else {
+		elog(ERROR, "Unknown datatype %s", tacc->element_type);
+	}
+	elog(INFO, "reduce token [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val));
+}
+
+PG_FUNCTION_INFO_V1(fhirpath_as_token);
+Datum
+fhirpath_as_token(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+
+	if(jb == NULL){ PG_RETURN_NULL();}
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	TokenAccumulator acc;
+	acc.element_type = type;
+	acc.acc = NULL;
+	elog(INFO, "accumulated");
+
+	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_token);
+
+	if (num_results > 0 && acc.acc != NULL)
+		PG_RETURN_ARRAYTYPE_P(makeArrayResult(acc.acc, CurrentMemoryContext));
+	else
+		PG_RETURN_NULL();
 }

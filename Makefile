@@ -6,7 +6,7 @@ OBJS = fhirpath.o fhirpath_gram.o fhirpath_support.o fhirpath_jsonb.o
 EXTENSION = fhirpath
 DATA = fhirpath--1.0.sql
 
-REGRESS = fhirpath extract
+REGRESS = fhirpath to_string to_token
 # We need a UTF8 database
 ENCODING = UTF8
 
