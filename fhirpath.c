@@ -32,6 +32,20 @@ static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
 static void reduce_as_date(void *acc, JsonbValue *val);
 
+typedef enum MinMax {min, max} MinMax;  
+
+MinMax
+minmax_from_string(char *s){
+	if(strcmp(s, "min") == 0){
+		return min;
+	} else if (strcmp(s, "max") == 0) {
+		return max;
+	} else {
+		elog(ERROR, "expected min or max");
+	}
+}
+
+
 /* standard *in* function to parse fhirpath datatype from string */
 /* Fhirpath is parse tree, see fhirpath_gram for grammars */
 
@@ -669,18 +683,45 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 typedef struct NumericAccumulator {
 	char	*element_type;
 	Numeric acc;
+	MinMax minmax;
 } NumericAccumulator;
+
+static char *
+numeric_to_cstring(Numeric n)
+{
+	Datum		d = NumericGetDatum(n);
+
+	return DatumGetCString(DirectFunctionCall1(numeric_out, d));
+}
+
+void
+update_numeric(NumericAccumulator *nacc, Numeric num){
+	if(nacc->acc == NULL){
+		nacc->acc = num;
+	} else {
+
+		bool gt = DirectFunctionCall2(numeric_gt, (Datum) nacc->acc, (Datum) num);
+		/* elog(INFO, "%s > %s, gt %d min %d", numeric_to_cstring(num), numeric_to_cstring(nacc->acc), gt, nacc->minmax); */
+		if (nacc->minmax == min && gt == 1){
+			nacc->acc = num;
+		} else if (nacc->minmax == max && gt == 0){
+			nacc->acc = num;
+		}
+	}
+}
 
 void reduce_as_number(void *acc, JsonbValue *val){
 	NumericAccumulator *nacc = acc;
+
+	/* elog(INFO, "extract as number [%s] %s", nacc->element_type, jsonbv_to_string(NULL, val)); */
 
 	if ( strcmp(nacc->element_type, "decimal") == 0 ||
 		 strcmp(nacc->element_type, "integer") == 0 ||
 		 strcmp(nacc->element_type, "positiveInt") == 0 ||
 		 strcmp(nacc->element_type, "unsignedInt") == 0 ) {
 
-		if(val != NULL && val->type == jbvNumeric && nacc->acc == NULL){
-			nacc->acc = val->val.numeric;
+		if(val != NULL && val->type == jbvNumeric){
+			update_numeric(nacc, val->val.numeric);
 		}
 
 	} else if (
@@ -693,11 +734,10 @@ void reduce_as_number(void *acc, JsonbValue *val){
 		strcmp(nacc->element_type, "SimpleQuantity") == 0
 	) {
 
-
 		JsonbValue *value = jsonb_get_key("value", val); 
 
-		if(value != NULL && value->type == jbvNumeric && nacc->acc == NULL){
-			nacc->acc = value->val.numeric;
+		if(value != NULL && value->type == jbvNumeric){
+			update_numeric(nacc, value->val.numeric);
 		}
 
 	} else {
@@ -714,6 +754,7 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 	Jsonb      *jb = PG_GETARG_JSONB(0);
 	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
 	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+	MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(3))); 
 
 
 	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
@@ -726,9 +767,10 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 
 	NumericAccumulator acc;
 	acc.element_type = type;
+	acc.minmax = minmax;
 	acc.acc = NULL;
 
-	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_number);
+	reduce_fhirpath(&jbv, &fp, &acc, reduce_as_number);
 
 	if (acc.acc != NULL)
 		PG_RETURN_NUMERIC(acc.acc);
@@ -740,6 +782,7 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 typedef struct DateAccumulator {
 	char	*element_type;
 	Datum  acc;
+	MinMax minmax;
 } DateAccumulator;
 
 void reduce_as_date(void *acc, JsonbValue *val){
@@ -780,6 +823,8 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 	Jsonb      *jb = PG_GETARG_JSONB(0);
 	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
 	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+	/* MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(3)));  */
 
 
 	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
