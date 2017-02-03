@@ -21,7 +21,6 @@ before_script:
 env:
   matrix:
     - PGVERSION=9.6
-    - PGVERSION=9.5
 
 language: cpp
 compiler:
