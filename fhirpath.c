@@ -605,8 +605,9 @@ void reduce_as_reference(void *acc, JsonbValue *val){
 	if( ref != NULL && ref->type == jbvString) {
 		int last_entr = 0;
 		int num_entr = 0;
+		int i =0;
 
-		for(int i = 0; i < ref->val.string.len; i++) {
+		for(i = 0; i < ref->val.string.len; i++) {
 			char ch = ref->val.string.val[i];
 			if(ch == '/'){
 				num_entr += 1;
