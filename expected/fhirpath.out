@@ -112,13 +112,4 @@ SELECT fhirpath_extract('{"b":1, "c":2}', '.a OR .c');
  [2]
 (1 row)
 
--- SELECT fhirpath_extract(:pt, '.name.family.vals()');
--- SELECT fhirpath_values(:pt);
--- -- create table if not exists Patient (resource jsonb);
--- -- delete from Patient;
--- -- insert into Patient (resource) values (:pt);
--- -- SELECT fhirpath_as_string(:pt, '.name', 'HumanName');
--- -- SELECT Patient.*
--- -- FROM Patient
--- -- WHERE fhirpath_as_string('HumanName', fhirpath(resource, 'Patient.name')) ilike '%ivan%' LIMIT 10 OFFSET 0;
 -- --}}}

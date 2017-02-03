@@ -3,9 +3,11 @@
 #include "fmgr.h"
 #include "lib/stringinfo.h"
 #include "utils/builtins.h"
+#include "utils/formatting.h"
 #include "utils/json.h"
 #include "fhirpath.h"
 #include "catalog/pg_type.h"
+#include "catalog/pg_collation.h"
 #include "utils/jsonb.h"
 
 #define PG_RETURN_FHIRPATH(p)	PG_RETURN_POINTER(p)
@@ -446,10 +448,10 @@ fhirpath_as_string(PG_FUNCTION_ARGS) {
 	}
 }
 
-typedef struct TokenAccumulator {
+typedef struct ArrayAccumulator {
 	char	*element_type;
 	ArrayBuildState *acc;
-} TokenAccumulator;
+} ArrayAccumulator;
 
 text *
 get_text_key(JsonbValue *val, char *key) {
@@ -469,13 +471,13 @@ appendStringInfoText(StringInfo str, const text *t)
 }
 
 static void
-append_token(TokenAccumulator *acc, text *token) {
+append_token(ArrayAccumulator *acc, text *token) {
 	if( token != NULL )
 		acc->acc = accumArrayResult(acc->acc, (Datum)token, false, TEXTOID, CurrentMemoryContext);
 }
 
 static void
-append_token_pair(TokenAccumulator *tacc, text *a, text *b) {
+append_token_pair(ArrayAccumulator *tacc, text *a, text *b) {
 
 	if( a != NULL && b != NULL){
 		StringInfoData		buf;
@@ -494,7 +496,7 @@ append_token_pair(TokenAccumulator *tacc, text *a, text *b) {
 
 
 void reduce_as_token(void *acc, JsonbValue *val){
-	TokenAccumulator *tacc = (TokenAccumulator *) acc;
+	ArrayAccumulator *tacc = (ArrayAccumulator *) acc;
 
 	/* elog(INFO, "reduce token [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
 
@@ -527,7 +529,7 @@ void reduce_as_token(void *acc, JsonbValue *val){
 		if(codings != NULL) {
 
 			/* we have to change element type */
-			TokenAccumulator tmpacc;
+			ArrayAccumulator tmpacc;
 			tmpacc.element_type = "Coding";
 			tmpacc.acc = tacc->acc;
 			reduce_jsonb_array(codings, &tmpacc, reduce_as_token);
@@ -578,11 +580,66 @@ fhirpath_as_token(PG_FUNCTION_ARGS) {
 	JsonbValue	jbv;
 	initJsonbValue(&jbv, jb);
 
-	TokenAccumulator acc;
+	ArrayAccumulator acc;
 	acc.element_type = type;
 	acc.acc = NULL;
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_token);
+
+	if (num_results > 0 && acc.acc != NULL)
+		PG_RETURN_ARRAYTYPE_P(makeArrayResult(acc.acc, CurrentMemoryContext));
+	else
+		PG_RETURN_NULL();
+}
+
+void reduce_as_reference(void *acc, JsonbValue *val){
+	ArrayAccumulator *tacc = (ArrayAccumulator *) acc;
+
+	/* elog(INFO, "reduce ref [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
+	JsonbValue *ref = jsonb_get_key("reference", val);
+
+	if( ref != NULL && ref->type == jbvString) {
+		int last_entr = 0;
+		int num_entr = 0;
+
+		for(int i = 0; i < ref->val.string.len; i++) {
+			char ch = ref->val.string.val[i];
+			if(ch == '/'){
+				num_entr += 1;
+				last_entr = i;
+			}
+		}
+
+		append_token(tacc, cstring_to_text_with_len(ref->val.string.val, ref->val.string.len));
+		if(num_entr == 1) {
+			char *resource_id = ref->val.string.val + last_entr;
+			append_token(tacc, cstring_to_text_with_len(resource_id, ref->val.string.len - last_entr));
+		}
+	}
+}
+
+PG_FUNCTION_INFO_V1(fhirpath_as_reference);
+Datum
+fhirpath_as_reference(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+
+	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	ArrayAccumulator acc;
+	acc.element_type = type;
+	acc.acc = NULL;
+
+	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_reference);
 
 	if (num_results > 0 && acc.acc != NULL)
 		PG_RETURN_ARRAYTYPE_P(makeArrayResult(acc.acc, CurrentMemoryContext));

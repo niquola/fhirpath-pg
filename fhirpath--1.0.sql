@@ -35,3 +35,8 @@ CREATE OR REPLACE FUNCTION fhirpath_as_token(jsonb, fhirpath, text)
 RETURNS text[]
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION fhirpath_as_reference(jsonb, fhirpath, text)
+RETURNS text[]
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT IMMUTABLE;
