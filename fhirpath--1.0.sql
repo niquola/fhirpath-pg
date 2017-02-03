@@ -45,3 +45,8 @@ CREATE OR REPLACE FUNCTION fhirpath_as_number(jsonb, fhirpath, text)
 RETURNS numeric
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION fhirpath_as_date(jsonb, fhirpath, text)
+RETURNS timestamptz
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT IMMUTABLE;

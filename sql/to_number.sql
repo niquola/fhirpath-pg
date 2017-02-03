@@ -13,3 +13,5 @@ SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Duration') + 0
 SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Quantity') + 0.05;
 
 SELECT fhirpath_as_number('{"a":{"b": {"value": "ups"}}}', '.a.b', 'Quantity') + 0.05;
+
+SELECT fhirpath_as_number('{"a":{"b": {"value": [5.1, 6.1]}}}', '.a.b', 'Quantity') + 0.05;

@@ -4,6 +4,7 @@
 #include "lib/stringinfo.h"
 #include "utils/builtins.h"
 #include "utils/formatting.h"
+#include "utils/timestamp.h"
 #include "utils/json.h"
 #include "fhirpath.h"
 #include "catalog/pg_type.h"
@@ -29,6 +30,7 @@ static void reduce_as_reference(void *acc, JsonbValue *val);
 static void reduce_as_number(void *acc, JsonbValue *val);
 static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
+static void reduce_as_date(void *acc, JsonbValue *val);
 
 PG_FUNCTION_INFO_V1(fhirpath_in);
 Datum
@@ -683,7 +685,7 @@ void reduce_as_number(void *acc, JsonbValue *val){
 		}
 
 	} else {
-		elog(ERROR, "Could not extract as number %s", jsonbv_to_string(NULL, val));
+		elog(ERROR, "Could not extract as number [%s] %s", nacc->element_type, jsonbv_to_string(NULL, val));
 	}
 }
 
@@ -718,3 +720,68 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 		PG_RETURN_NULL();
 }
 
+
+typedef struct DateAccumulator {
+	char	*element_type;
+	Datum  acc;
+} DateAccumulator;
+
+void reduce_as_date(void *acc, JsonbValue *val){
+	DateAccumulator *dacc = acc;
+	/* elog(INFO, "extract as date %s", jsonbv_to_string(NULL, val)); */
+
+	if(val != NULL && val->type == jbvString && dacc->acc == 0) {
+		char *ref_str = "0000-01-01T00:00:00.0000";
+		long ref_str_len = 24; 
+
+		StringInfoData buf;
+		initStringInfo(&buf);
+		appendBinaryStringInfo(&buf, val->val.string.val, val->val.string.len);
+
+		long str_len = val->val.string.len;
+
+		if( str_len < ref_str_len){
+			char *ref_tail = ref_str + str_len;
+			appendBinaryStringInfo(&buf, ref_tail, ref_str_len - str_len);
+		}
+
+		elog(INFO, "parse as date %s", buf.data);
+
+		dacc->acc = DirectFunctionCall3(timestamptz_in,
+										 CStringGetDatum(buf.data),
+										 ObjectIdGetDatum(InvalidOid),
+										 Int32GetDatum(-1));
+	}
+
+}
+
+
+PG_FUNCTION_INFO_V1(fhirpath_as_date);
+
+Datum
+fhirpath_as_date(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+
+	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	DateAccumulator acc;
+	acc.element_type = type;
+	acc.acc = 0;
+
+	reduce_fhirpath(&jbv, &fp, &acc, reduce_as_date);
+
+	if (acc.acc != 0)
+		PG_RETURN_TIMESTAMPTZ(acc.acc);
+	else
+		PG_RETURN_NULL();
+}

@@ -76,3 +76,9 @@ SELECT fhirpath_as_number('{"a":{"b": {"value": "ups"}}}', '.a.b', 'Quantity') +
          
 (1 row)
 
+SELECT fhirpath_as_number('{"a":{"b": {"value": [5.1, 6.1]}}}', '.a.b', 'Quantity') + 0.05;
+ ?column? 
+----------
+         
+(1 row)
+
