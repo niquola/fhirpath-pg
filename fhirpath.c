@@ -32,6 +32,9 @@ static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
 static void reduce_as_date(void *acc, JsonbValue *val);
 
+/* standard *in* function to parse fhirpath datatype from string */
+/* Fhirpath is parse tree, see fhirpath_gram for grammars */
+
 PG_FUNCTION_INFO_V1(fhirpath_in);
 Datum
 fhirpath_in(PG_FUNCTION_ARGS)
@@ -61,6 +64,7 @@ fhirpath_in(PG_FUNCTION_ARGS)
 
 }
 
+/* standard *out* function to dump fhirpath datatype to text */
 
 PG_FUNCTION_INFO_V1(fhirpath_out);
 Datum
@@ -84,18 +88,38 @@ fhirpath_out(PG_FUNCTION_ARGS)
 }
 
 
-static JsonbValue
-*jsonb_get_key(char *key, JsonbValue *jbv){
+/* return value of obj key */
+static JsonbValue *
+jsonb_get_key(char *key, JsonbValue *obj){
+
 	JsonbValue	key_v;
 	key_v.type = jbvString;
 	key_v.val.string.len = strlen(key);
 	key_v.val.string.val = key;
 
-	if(jbv->type == jbvBinary){
-		return findJsonbValueFromContainer((JsonbContainer *) jbv->val.binary.data , JB_FOBJECT, &key_v);
+	/* test it's container (object) */
+	if(obj->type == jbvBinary){
+		/* we need to use special function to get valid JsonbValue */
+		return findJsonbValueFromContainer((JsonbContainer *) obj->val.binary.data , JB_FOBJECT, &key_v);
 	} else {
 		return NULL;
 	}
+}
+
+inline text *
+jsonb_string_as_text(JsonbValue *value) {
+
+	if(value!=NULL && value->type == jbvString) {
+		return cstring_to_text_with_len(value->val.string.val, value->val.string.len);
+	} else {
+		return NULL;
+	}
+}
+
+/* return string value of key of obj as pg text */
+text *
+get_text_key(JsonbValue *obj, char *key) {
+	return jsonb_string_as_text(jsonb_get_key(key, obj));
 }
 
 static bool
@@ -457,15 +481,6 @@ typedef struct ArrayAccumulator {
 	ArrayBuildState *acc;
 } ArrayAccumulator;
 
-text *
-get_text_key(JsonbValue *val, char *key) {
-	JsonbValue *value = jsonb_get_key(key, val);
-
-	if(value!=NULL && value->type == jbvString)
-		return cstring_to_text_with_len(value->val.string.val, value->val.string.len);
-	else
-		return NULL;
-}
 
 
 static void
@@ -515,8 +530,8 @@ void reduce_as_token(void *acc, JsonbValue *val){
 		append_token_pair(tacc, system, value);
 
 	} else if (strcmp(tacc->element_type, "code") == 0 || strcmp(tacc->element_type, "string") == 0 || strcmp(tacc->element_type, "uri") == 0) {
-		if(val!=NULL && val->type == jbvString)
-		  append_token(tacc,  cstring_to_text_with_len(val->val.string.val, val->val.string.len));
+
+		append_token(tacc, jsonb_string_as_text(val));
 
 	} else if (strcmp(tacc->element_type, "Coding") == 0) {
 		text *code = get_text_key(val, "code");
@@ -540,7 +555,6 @@ void reduce_as_token(void *acc, JsonbValue *val){
 			tacc->acc = tmpacc.acc;
 
 		}
-
 
 	} else if (strcmp(tacc->element_type, "Quantity") == 0) {
 
