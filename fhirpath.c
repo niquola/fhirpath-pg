@@ -679,7 +679,7 @@ void reduce_as_number(void *acc, JsonbValue *val){
 		 strcmp(nacc->element_type, "positiveInt") == 0 ||
 		 strcmp(nacc->element_type, "unsignedInt") == 0 ) {
 
-		if(val->type == jbvNumeric && nacc->acc == NULL){
+		if(val != NULL && val->type == jbvNumeric && nacc->acc == NULL){
 			nacc->acc = val->val.numeric;
 		}
 
@@ -693,9 +693,10 @@ void reduce_as_number(void *acc, JsonbValue *val){
 		strcmp(nacc->element_type, "SimpleQuantity") == 0
 	) {
 
+
 		JsonbValue *value = jsonb_get_key("value", val); 
 
-		if(value->type == jbvNumeric && nacc->acc == NULL){
+		if(value != NULL && value->type == jbvNumeric && nacc->acc == NULL){
 			nacc->acc = value->val.numeric;
 		}
 
@@ -729,7 +730,7 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_number);
 
-	if (num_results > 0 && acc.acc != NULL)
+	if (acc.acc != NULL)
 		PG_RETURN_NUMERIC(acc.acc);
 	else
 		PG_RETURN_NULL();
