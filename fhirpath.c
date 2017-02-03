@@ -25,6 +25,8 @@ static void reduce_jsonb(void *buf, JsonbValue *val);
 static void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn);
 static void reduce_as_string_values(void *acc, JsonbValue *val);
 static void reduce_as_string(void *acc, JsonbValue *val);
+static void reduce_as_reference(void *acc, JsonbValue *val);
+static void reduce_as_number(void *acc, JsonbValue *val);
 static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
 
@@ -646,3 +648,73 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 	else
 		PG_RETURN_NULL();
 }
+
+typedef struct NumericAccumulator {
+	char	*element_type;
+	Numeric acc;
+} NumericAccumulator;
+
+void reduce_as_number(void *acc, JsonbValue *val){
+	NumericAccumulator *nacc = acc;
+
+	if ( strcmp(nacc->element_type, "decimal") == 0 ||
+		 strcmp(nacc->element_type, "integer") == 0 ||
+		 strcmp(nacc->element_type, "positiveInt") == 0 ||
+		 strcmp(nacc->element_type, "unsignedInt") == 0 ) {
+
+		if(val->type == jbvNumeric && nacc->acc == NULL){
+			nacc->acc = val->val.numeric;
+		}
+
+	} else if (
+		strcmp(nacc->element_type, "Duration") == 0 ||
+		strcmp(nacc->element_type, "Quantity") == 0 ||
+		strcmp(nacc->element_type, "Age") == 0 ||
+		strcmp(nacc->element_type, "Count") == 0 ||
+		strcmp(nacc->element_type, "Money") == 0 ||
+		strcmp(nacc->element_type, "Distance") == 0 ||
+		strcmp(nacc->element_type, "SimpleQuantity") == 0
+	) {
+
+		JsonbValue *value = jsonb_get_key("value", val); 
+
+		if(value->type == jbvNumeric && nacc->acc == NULL){
+			nacc->acc = value->val.numeric;
+		}
+
+	} else {
+		elog(ERROR, "Could not extract as number %s", jsonbv_to_string(NULL, val));
+	}
+}
+
+
+PG_FUNCTION_INFO_V1(fhirpath_as_number);
+
+Datum
+fhirpath_as_number(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+
+	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	NumericAccumulator acc;
+	acc.element_type = type;
+	acc.acc = NULL;
+
+	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_number);
+
+	if (num_results > 0 && acc.acc != NULL)
+		PG_RETURN_NUMERIC(acc.acc);
+	else
+		PG_RETURN_NULL();
+}
+
