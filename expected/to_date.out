@@ -1,35 +1,78 @@
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date'); 
-INFO:  parse as date 1980-01-01T00:00:00.0000
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'min'); 
        fhirpath_as_date       
 ------------------------------
  Tue Jan 01 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date'); 
-INFO:  parse as date 1980-02-01T00:00:00.0000
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'min'); 
        fhirpath_as_date       
 ------------------------------
  Fri Feb 01 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date'); 
-INFO:  parse as date 1980-02-05T00:00:00.0000
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'min'); 
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date'); 
-INFO:  parse as date 1980-02-05T08:00:00.0000
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'min'); 
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date'); 
-INFO:  parse as date 1980-02-05T08:30:00.0000
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'min'); 
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:00 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'min'); 
+       fhirpath_as_date       
+------------------------------
+ Sun Feb 03 00:00:00 1952 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Thu Jan 01 00:00:00 1981 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Sat Mar 01 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Wed Feb 06 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Tue Feb 05 08:59:59 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Tue Feb 05 08:30:59 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30+05"}}}', '.a.b.c', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Mon Feb 04 19:30:00 1980 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'max'); 
+       fhirpath_as_date       
+------------------------------
+ Tue Feb 05 08:30:59 1980 PST
 (1 row)
 

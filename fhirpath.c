@@ -5,6 +5,7 @@
 #include "utils/builtins.h"
 #include "utils/formatting.h"
 #include "utils/timestamp.h"
+#include "utils/datetime.h"
 #include "utils/json.h"
 #include "fhirpath.h"
 #include "catalog/pg_type.h"
@@ -33,6 +34,17 @@ static void reduce_as_token(void *acc, JsonbValue *val);
 static void reduce_as_date(void *acc, JsonbValue *val);
 
 typedef enum MinMax {min, max} MinMax;  
+
+static MinMax minmax_from_string(char *s);
+
+typedef struct NumericAccumulator {
+	char	*element_type;
+	Numeric acc;
+	MinMax minmax;
+} NumericAccumulator;
+
+static void update_numeric(NumericAccumulator *nacc, Numeric num);
+static char * numeric_to_cstring(Numeric n);
 
 MinMax
 minmax_from_string(char *s){
@@ -680,11 +692,6 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 		PG_RETURN_NULL();
 }
 
-typedef struct NumericAccumulator {
-	char	*element_type;
-	Numeric acc;
-	MinMax minmax;
-} NumericAccumulator;
 
 static char *
 numeric_to_cstring(Numeric n)
@@ -789,8 +796,8 @@ void reduce_as_date(void *acc, JsonbValue *val){
 	DateAccumulator *dacc = acc;
 	/* elog(INFO, "extract as date %s", jsonbv_to_string(NULL, val)); */
 
-	if(val != NULL && val->type == jbvString && dacc->acc == 0) {
-		char *ref_str = "0000-01-01T00:00:00.0000";
+	if(val != NULL && val->type == jbvString) {
+		char *ref_str = "0000-01-01T00:00:00";
 		long ref_str_len = 24; 
 
 		StringInfoData buf;
@@ -804,12 +811,73 @@ void reduce_as_date(void *acc, JsonbValue *val){
 			appendBinaryStringInfo(&buf, ref_tail, ref_str_len - str_len);
 		}
 
-		elog(INFO, "parse as date %s", buf.data);
+		/* elog(INFO, "parse as date %s", buf.data); */
 
-		dacc->acc = DirectFunctionCall3(timestamptz_in,
+		Datum min_date = DirectFunctionCall3(timestamptz_in,
 										 CStringGetDatum(buf.data),
 										 ObjectIdGetDatum(InvalidOid),
 										 Int32GetDatum(-1));
+		if(dacc->minmax == min) {
+			if(dacc->acc != 0){
+				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, min_date, dacc->acc);
+				/* elog(INFO, "compare %d", gt); */
+				if(gt < 0) {
+					dacc->acc = min_date;
+				}
+			} else if (min_date != 0) {
+				dacc->acc = min_date;
+			}
+		} else if (dacc->minmax == max ) {
+			Timestamp	max_date;
+			int			tz;
+			struct pg_tm tt, *tm = &tt;
+			fsec_t		fsec;
+
+			if (timestamp2tm(min_date, &tz, tm, &fsec, NULL, NULL) != 0)
+				ereport(ERROR,
+						(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+						 errmsg("timestamp out of range")));
+
+			/* elog(INFO, "get tm %d y %d m %d d", tm->tm_year, tm->tm_mon, tm->tm_mday); */
+
+			if (str_len < 5) {
+				tm->tm_year += 1;
+			} else if (str_len < 8) {
+				if(tm->tm_mon == MONTHS_PER_YEAR) {
+					tm->tm_year += 1;
+					tm->tm_mon = 1;
+				} else {
+					tm->tm_mon += 1;
+				}
+			} else if (str_len < 11) {
+				int			julian;
+				julian = date2j(tm->tm_year, tm->tm_mon, tm->tm_mday) + 1;
+				j2date(julian, &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
+			} else if (str_len < 14) {
+				tm->tm_min = 59;
+				tm->tm_sec = 59;
+			} else if (str_len < 17) {
+				tm->tm_sec = 59;
+			}
+
+			if (tm2timestamp(tm, fsec, &tz, &max_date) != 0)
+				ereport(ERROR,
+						(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+						 errmsg("timestamp out of range")));
+
+			if(dacc->acc != 0){
+				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, max_date, dacc->acc);
+				if(gt > 0) {
+					dacc->acc = max_date;
+				}
+			} else if (max_date != 0){
+				dacc->acc = max_date;
+			}
+
+		} else {
+			elog(ERROR, "expected min or max value");
+		}
+
 	}
 
 }
@@ -823,8 +891,8 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 	Jsonb      *jb = PG_GETARG_JSONB(0);
 	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
 	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+	MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(3))); 
 
-	/* MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(3)));  */
 
 
 	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
@@ -838,6 +906,7 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 	DateAccumulator acc;
 	acc.element_type = type;
 	acc.acc = 0;
+	acc.minmax = minmax;
 
 	reduce_fhirpath(&jbv, &fp, &acc, reduce_as_date);
 
