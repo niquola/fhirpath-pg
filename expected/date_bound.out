@@ -1,0 +1,60 @@
+SELECT fhirpath_date_bound('1980', 'min'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Jan 01 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02', 'min'); 
+     fhirpath_date_bound      
+------------------------------
+ Fri Feb 01 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05','min'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Feb 05 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05T08', 'min'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Feb 05 08:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05T08:30', 'min'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Feb 05 08:30:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980', 'max'); 
+     fhirpath_date_bound      
+------------------------------
+ Thu Jan 01 00:00:00 1981 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02', 'max'); 
+     fhirpath_date_bound      
+------------------------------
+ Sat Mar 01 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05','max'); 
+     fhirpath_date_bound      
+------------------------------
+ Wed Feb 06 00:00:00 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05T08', 'max'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Feb 05 08:59:59 1980 PST
+(1 row)
+
+SELECT fhirpath_date_bound('1980-02-05T08:30', 'max'); 
+     fhirpath_date_bound      
+------------------------------
+ Tue Feb 05 08:30:59 1980 PST
+(1 row)
+

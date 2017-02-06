@@ -37,6 +37,8 @@ typedef enum MinMax {min, max} MinMax;
 
 static MinMax minmax_from_string(char *s);
 
+static Datum date_bound(char *date_str, long str_len,  MinMax minmax);
+
 typedef struct NumericAccumulator {
 	char	*element_type;
 	Numeric acc;
@@ -44,7 +46,7 @@ typedef struct NumericAccumulator {
 } NumericAccumulator;
 
 static void update_numeric(NumericAccumulator *nacc, Numeric num);
-static char * numeric_to_cstring(Numeric n);
+/* static char * numeric_to_cstring(Numeric n); */
 
 MinMax
 minmax_from_string(char *s){
@@ -693,13 +695,13 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 }
 
 
-static char *
-numeric_to_cstring(Numeric n)
-{
-	Datum		d = NumericGetDatum(n);
+/* static char * */
+/* numeric_to_cstring(Numeric n) */
+/* { */
+/* 	Datum		d = NumericGetDatum(n); */
 
-	return DatumGetCString(DirectFunctionCall1(numeric_out, d));
-}
+/* 	return DatumGetCString(DirectFunctionCall1(numeric_out, d)); */
+/* } */
 
 void
 update_numeric(NumericAccumulator *nacc, Numeric num){
@@ -792,42 +794,28 @@ typedef struct DateAccumulator {
 	MinMax minmax;
 } DateAccumulator;
 
-void reduce_as_date(void *acc, JsonbValue *val){
-	DateAccumulator *dacc = acc;
-	/* elog(INFO, "extract as date %s", jsonbv_to_string(NULL, val)); */
-
-	if(val != NULL && val->type == jbvString) {
+Datum
+date_bound(char *date_str, long str_len,  MinMax minmax){
+	if(date_str != NULL) {
 		char *ref_str = "0000-01-01T00:00:00";
-		long ref_str_len = 24; 
+		long ref_str_len = 24;
 
 		StringInfoData buf;
 		initStringInfo(&buf);
-		appendBinaryStringInfo(&buf, val->val.string.val, val->val.string.len);
-
-		long str_len = val->val.string.len;
+		appendBinaryStringInfo(&buf, date_str, str_len);
 
 		if( str_len < ref_str_len){
 			char *ref_tail = ref_str + str_len;
 			appendBinaryStringInfo(&buf, ref_tail, ref_str_len - str_len);
 		}
 
-		/* elog(INFO, "parse as date %s", buf.data); */
-
 		Datum min_date = DirectFunctionCall3(timestamptz_in,
 										 CStringGetDatum(buf.data),
 										 ObjectIdGetDatum(InvalidOid),
 										 Int32GetDatum(-1));
-		if(dacc->minmax == min) {
-			if(dacc->acc != 0){
-				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, min_date, dacc->acc);
-				/* elog(INFO, "compare %d", gt); */
-				if(gt < 0) {
-					dacc->acc = min_date;
-				}
-			} else if (min_date != 0) {
-				dacc->acc = min_date;
-			}
-		} else if (dacc->minmax == max ) {
+		if(minmax == min) {
+			return min_date;
+		} else if (minmax == max ) {
 			Timestamp	max_date;
 			int			tz;
 			struct pg_tm tt, *tm = &tt;
@@ -865,13 +853,40 @@ void reduce_as_date(void *acc, JsonbValue *val){
 						(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
 						 errmsg("timestamp out of range")));
 
+			return max_date;
+		} else {
+			elog(ERROR, "expected min or max value");
+		}
+	}
+	return 0;
+}
+
+void reduce_as_date(void *acc, JsonbValue *val){
+	DateAccumulator *dacc = acc;
+	/* elog(INFO, "extract as date %s", jsonbv_to_string(NULL, val)); */
+
+	if(val != NULL && val->type == jbvString) {
+
+		Datum date = date_bound(val->val.string.val, val->val.string.len, dacc->minmax);
+
+		if(dacc->minmax == min) {
 			if(dacc->acc != 0){
-				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, max_date, dacc->acc);
-				if(gt > 0) {
-					dacc->acc = max_date;
+				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, date, dacc->acc);
+				/* elog(INFO, "compare %d", gt); */
+				if(gt < 0) {
+					dacc->acc = date;
 				}
-			} else if (max_date != 0){
-				dacc->acc = max_date;
+			} else if (date != 0) {
+				dacc->acc = date;
+			}
+		} else if (dacc->minmax == max ) {
+			if(dacc->acc != 0){
+				int gt = DirectFunctionCall2(timestamptz_cmp_timestamp, date, dacc->acc);
+				if(gt > 0) {
+					dacc->acc = date;
+				}
+			} else if (date != 0){
+				dacc->acc = date;
 			}
 
 		} else {
@@ -880,6 +895,22 @@ void reduce_as_date(void *acc, JsonbValue *val){
 
 	}
 
+}
+
+PG_FUNCTION_INFO_V1(fhirpath_date_bound);
+
+Datum
+fhirpath_date_bound(PG_FUNCTION_ARGS) {
+	char       *date = text_to_cstring(PG_GETARG_TEXT_P(0));
+	MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(1))); 
+
+	Datum res = date_bound(date, strlen(date), minmax);
+
+	if(res != 0){
+		return res;
+	} else {
+		PG_RETURN_NULL();
+	}
 }
 
 
