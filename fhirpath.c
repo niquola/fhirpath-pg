@@ -659,8 +659,8 @@ void reduce_as_reference(void *acc, JsonbValue *val){
 
 		append_token(tacc, cstring_to_text_with_len(ref->val.string.val, ref->val.string.len));
 		if(num_entr == 1) {
-			char *resource_id = ref->val.string.val + last_entr;
-			append_token(tacc, cstring_to_text_with_len(resource_id, ref->val.string.len - last_entr));
+			char *resource_id = ref->val.string.val + last_entr + 1;
+			append_token(tacc, cstring_to_text_with_len(resource_id, ref->val.string.len - last_entr - 1));
 		}
 	}
 }
