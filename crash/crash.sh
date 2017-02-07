@@ -3,11 +3,11 @@ set -e
 
 RESOURCE=$(<resource.json)
 
-# All search types from doc https://www.hl7.org/fhir/search.html
-# SEARCH_TYPES=(date number reference string token uri quantity)
+# Search types from doc https://www.hl7.org/fhir/search.html
+SEARCH_TYPES=(date number reference string token uri quantity)
 
 # Supported search types
-SEARCH_TYPES=(date number reference string token)
+# SEARCH_TYPES=(date number reference string token )
 
 # Data types https://www.hl7.org/FHIR/datatypes.html
 PRIMITIVE_DATA_TYPES=(integer decimal unsignedInt positiveInt instant time date dateTime boolean string code id markdown uri oid base64Binary)
@@ -37,8 +37,10 @@ function mk_query() {
 		MODIFICATION=", '$4'"
 	fi
 
-  echo "SELECT fhirpath_as_$SEARCH_TYPE('$RESOURCE', '$PTH', '$DATA_TYPE' $MODIFICATION);"
+  echo "SELECT fhirpath_as_$SEARCH_TYPE(:resource, '$PTH', '$DATA_TYPE' $MODIFICATION);"
 }
+
+echo "select '''$RESOURCE''' resource \\gset"
 
 for st in "${SEARCH_TYPES[@]}"
 do
