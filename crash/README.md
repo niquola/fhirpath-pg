@@ -10,54 +10,45 @@ psql -f crash.sql
 
 ## Search Parameter Types
 
+| Data Type        | number | date | string | token | reference | quantity | uri | composite |
+| -                |        |      |        |       |           |          |     |           |
+| __Primitive__    |        |      |        |       |           |          |     |           |
+| boolean          |        |      |        | Y     |           |          |     |           |
+| code             |        |      |        | Y     |           |          |     |           |
+| date             |        | Y    |        |       |           |          |     |           |
+| dateTime         |        | Y    |        |       |           |          |     |           |
+| instant          |        | Y    |        |       |           |          |     |           |
+| integer          | Y      |      |        |       |           |          |     |           |
+| _unsignedInt_    | Y      |      |        |       |           |          |     |           |
+| _positiveInt_    | Y      |      |        |       |           |          |     |           |
+| string           |        |      | Y      | Y     |           |          |     |           |
+| _code_           |        |      | Y      |       |           |          |     |           |
+| _id_             |        |      | Y      |       |           |          |     |           |
+| _markdown_       |        |      | Y      |       |           |          |     |           |
+| uri              |        |      |        |       | Y         |          | Y   |           |
+| _oid_            |        |      |        |       |           |          | Y   |           |
+| __Complex__      |        |      |        |       |           |          |     |           |
+| Address          |        |      | Y      |       |           |          |     |           |
+| Annotation       |        |      |        |       |           |          |     |           |
+| CodeableConcept  |        |      |        | Y     |           |          |     |           |
+| Coding           |        |      |        | Y     |           |          |     |           |
+| ContactPoint     |        |      |        | Y     |           |          |     |           |
+| Duration         |        |      |        |       |           |          |     |           |
+| HumanName        |        |      | Y      |       |           |          |     |           |
+| Identifier       |        |      |        | Y     |           |          |     |           |
+| Period           |        | Y    |        |       |           |          |     |           |
+| Quantity         | Y      |      |        |       |           | Y        |     |           |
+| _Age_            | Y      |      |        |       |           |          |     |           |
+| _Distance_       | Y      |      |        |       |           |          |     |           |
+| _SimpleQuantity_ | Y      |      |        |       |           |          |     |           |
+| _Duration_       | Y      |      |        |       |           |          |     |           |
+| _Count_          | Y      |      |        |       |           |          |     |           |
+| _Money_          | Y      |      |        |       |           |          |     |           |
+| Range            |        |      |        |       |           |          |     |           |
+| Reference        |        |      |        |       | Y         |          |     |           |
+| SampledData      |        |      |        |       |           |          |     |           |
+| Timing           |        | Y    |        |       |           |          |     |           |
 
-URI - not supported  (partially as String)
-
-P - Possible search (logically faithful)
-S - Supported search (awaliable for search)
-
-
-| Data Type        | + Number | + Date | + String | + Token | + Reference | - Composite | - Quantity | - URI (same as sting) |
-| --               | --       | -      | -        | -       | -           | -           | -          | -     |
-| __Primitive__    | -        | --     | --       | --      | --          | --          | --         | --    |
-| boolean          |          |        |          |         |             |             |            |       |
-| instant          |          | PS     |          |         |             |             |            |       |
-| time             |          | PS     |          |         |             |             |            |       |
-| date             |          | PS     |          |         |             |             |            |       |
-| dateTime         |          | PS     |          |         |             |             |            |       |
-| decimal          | PS       |        |          |         |             |             |            |       |
-| integer          | PS       |        |          |         |             |             |            |       |
-| unsignedInt      | PS       |        |          |         |             |             |            |       |
-| positiveInt      | PS       |        |          |         |             |             |            |       |
-| string           |          |        | PS       |         |             |             |            |       |
-| _code_           |          |        | PS       |         |             |             |            |       |
-| _id_             |          |        | PS       |         |             |             |            |       |
-| markdown         |          |        | PS       |         |             |             |            |       |
-| uri              |          |        |          |         |             |             |            | PS    |
-| _oid_            |          |        |          |         |             |             |            | PS    |
-| base64Binary     |          |        |          |         |             |             |            | -     |
-| __Complex__      | --       | --     | --       | --      | --          | --          | --         | --    |
-| Period           | -        |        |          |         |             |             |            |       |
-| SampledData      |          |        |          |         |             |             |            |       |
-| Ratio            | P        |        |          |         |             |             |            |       |
-| Quantity         | P        |        |          |         |             |             |            |       |
-| _Age_            | P        |        |          |         |             |             |            |       |
-| _Distance_       | P        |        |          |         |             |             |            |       |
-| _SimpleQuantity_ | P        |        |          |         |             |             |            |       |
-| _Duration_       | P        |        |          |         |             |             |            |       |
-| _Count_          | P        |        |          |         |             |             |            |       |
-| _Money_          | P        |        |          |         |             |             |            |       |
-| Range            | P        |        |          |         |             |             |            |       |
-| Attachment       |          |        |          |         |             |             |            |       |
-| Coding           |          |        |          |         |             |             |            |       |
-| CodeableConcept  |          |        |          |         |             |             |            |       |
-| HumanName        |          | PS     |          |         |             |             |            |       |
-| Address          |          |        |          |         |             |             |            |       |
-| ContactPoint     |          |        |          |         |             |             |            |       |
-| Identifier       |          |        |          |         |             |             |            |       |
-| Timing           |          |        |          |         |             |             |            |       |
-| Signature        |          | P      |          |         |             |             |            |       |
-| Annotation       |          | P      | P        |         |             |             |            |       |
 
 
 
