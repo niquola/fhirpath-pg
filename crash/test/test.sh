@@ -17,6 +17,8 @@ function mk_query() {
     MODIFICATION=", 'max'"
   fi
 
+	#echo "select r('$SEARCH_TYPE, $PTH, $DATA_TYPE');"
+	echo "DO language plpgsql \$\$ BEGIN RAISE info '$SEARCH_TYPE $PTH $DATA_TYPE'; END \$\$;"
   echo "SELECT fhirpath_as_$SEARCH_TYPE(:resource, '$PTH', '$DATA_TYPE' $MODIFICATION);"
 }
 
@@ -25,15 +27,20 @@ function gen_pths() {
   local paths=()
   paths+=(".$data_type.value")
   paths+=(".$data_type.array")
-  paths+=(".$data_type.where(code=value).value")
-  paths+=(".$data_type.where(code=array).array")
-  paths+=(".$data_type.where(code=where).where.where(code=value).value")
-  paths+=(".$data_type.where(code=where).where.where(code=array).array")
+  paths+=(".$data_type.wheres.where(code=value).value")
+  paths+=(".$data_type.wheres.where(code=array).array")
+  paths+=(".$data_type.wheres.where(code=where).where.where(code=value).value")
+  paths+=(".$data_type.wheres.where(code=where).where.where(code=array).array")
 	echo "${paths[@]}"
 }
 
 
 echo "select '''$RESOURCE''' resource \\gset"
+echo "create or replace function r(error_message text) returns void as \$\$
+				begin
+					raise info '%', error_message;
+				end;
+			\$\$ language plpgsql;"
 
 for data_type in "${NUMBER[@]}"
 do

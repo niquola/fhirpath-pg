@@ -2,7 +2,7 @@
   "integer":{
     "value": 40,
     "array": [41, 42, 43],
-    "where": [
+    "wheres": [
       {
         "code": "value", "value": 44
       }, {

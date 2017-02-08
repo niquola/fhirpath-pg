@@ -2,7 +2,7 @@ select '''{
   "integer":{
     "value": 40,
     "array": [41, 42, 43],
-    "where": [
+    "wheres": [
       {
         "code": "value", "value": 44
       }, {
@@ -51,21 +51,44 @@ select '''{
     ]
   }
 }''' resource \gset
+create or replace function r(error_message text) returns void as $$
+				begin
+					raise info '%', error_message;
+				end;
+			$$ language plpgsql;
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.value integer'; END $$;
 SELECT fhirpath_as_number(:resource, '.integer.value', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.array integer'; END $$;
 SELECT fhirpath_as_number(:resource, '.integer.array', 'integer' , 'max');
-SELECT fhirpath_as_number(:resource, '.integer.where(code=value).value', 'integer' , 'max');
-SELECT fhirpath_as_number(:resource, '.integer.where(code=array).array', 'integer' , 'max');
-SELECT fhirpath_as_number(:resource, '.integer.where(code=where).where.where(code=value).value', 'integer' , 'max');
-SELECT fhirpath_as_number(:resource, '.integer.where(code=where).where.where(code=array).array', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.wheres.where(code=value).value integer'; END $$;
+SELECT fhirpath_as_number(:resource, '.integer.wheres.where(code=value).value', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.wheres.where(code=array).array integer'; END $$;
+SELECT fhirpath_as_number(:resource, '.integer.wheres.where(code=array).array', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.wheres.where(code=where).where.where(code=value).value integer'; END $$;
+SELECT fhirpath_as_number(:resource, '.integer.wheres.where(code=where).where.where(code=value).value', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .integer.wheres.where(code=where).where.where(code=array).array integer'; END $$;
+SELECT fhirpath_as_number(:resource, '.integer.wheres.where(code=where).where.where(code=array).array', 'integer' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.value unsignedInt'; END $$;
 SELECT fhirpath_as_number(:resource, '.unsignedInt.value', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.array unsignedInt'; END $$;
 SELECT fhirpath_as_number(:resource, '.unsignedInt.array', 'unsignedInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=value).value', 'unsignedInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=array).array', 'unsignedInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=where).where.where(code=value).value', 'unsignedInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=where).where.where(code=array).array', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.wheres.where(code=value).value unsignedInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.unsignedInt.wheres.where(code=value).value', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.wheres.where(code=array).array unsignedInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.unsignedInt.wheres.where(code=array).array', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.wheres.where(code=where).where.where(code=value).value unsignedInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.unsignedInt.wheres.where(code=where).where.where(code=value).value', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .unsignedInt.wheres.where(code=where).where.where(code=array).array unsignedInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.unsignedInt.wheres.where(code=where).where.where(code=array).array', 'unsignedInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.value positiveInt'; END $$;
 SELECT fhirpath_as_number(:resource, '.positiveInt.value', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.array positiveInt'; END $$;
 SELECT fhirpath_as_number(:resource, '.positiveInt.array', 'positiveInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=value).value', 'positiveInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=array).array', 'positiveInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=where).where.where(code=value).value', 'positiveInt' , 'max');
-SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=where).where.where(code=array).array', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.wheres.where(code=value).value positiveInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.positiveInt.wheres.where(code=value).value', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.wheres.where(code=array).array positiveInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.positiveInt.wheres.where(code=array).array', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.wheres.where(code=where).where.where(code=value).value positiveInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.positiveInt.wheres.where(code=where).where.where(code=value).value', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.wheres.where(code=where).where.where(code=array).array positiveInt'; END $$;
+SELECT fhirpath_as_number(:resource, '.positiveInt.wheres.where(code=where).where.where(code=array).array', 'positiveInt' , 'max');
