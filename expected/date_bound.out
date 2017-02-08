@@ -58,3 +58,15 @@ SELECT fhirpath_date_bound('1980-02-05T08:30', 'max');
  Tue Feb 05 08:30:59 1980 PST
 (1 row)
 
+select fhirpath_date_bound('2000-01-01', 'min');
+     fhirpath_date_bound      
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+select fhirpath_date_bound('2000-01-01', 'max');
+     fhirpath_date_bound      
+------------------------------
+ Sun Jan 02 00:00:00 2000 PST
+(1 row)
+
