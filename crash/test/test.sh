@@ -27,10 +27,10 @@ function gen_pths() {
   local paths=()
   paths+=(".$data_type.value")
   paths+=(".$data_type.array")
-  paths+=(".$data_type.wheres.where(code=value).value")
-  paths+=(".$data_type.wheres.where(code=array).array")
-  paths+=(".$data_type.wheres.where(code=where).where.where(code=value).value")
-  paths+=(".$data_type.wheres.where(code=where).where.where(code=array).array")
+  paths+=(".$data_type.where.where(code=value).value")
+  paths+=(".$data_type.where.where(code=array).array")
+  paths+=(".$data_type.where.where(code=where).where.where(code=value).value")
+  paths+=(".$data_type.where.where(code=where).where.where(code=array).array")
 	echo "${paths[@]}"
 }
 
