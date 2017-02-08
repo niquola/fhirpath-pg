@@ -1,7 +1,7 @@
 select '''{
   "integer":{
     "value": 40,
-    "arrayt": [41, 42, 43],
+    "array": [41, 42, 43],
     "where": [
       {
         "code": "value", "value": 44
@@ -51,5 +51,21 @@ select '''{
     ]
   }
 }''' resource \gset
-
-SELECT fhirpath_as_number(:resource, '.integer.arrayt', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.value', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.array', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.where(code=value).value', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.where(code=array).array', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.where(code=where).where.where(code=value).value', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.integer.where(code=where).where.where(code=array).array', 'integer' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.value', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.array', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=value).value', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=array).array', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=where).where.where(code=value).value', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.unsignedInt.where(code=where).where.where(code=array).array', 'unsignedInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.value', 'positiveInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.array', 'positiveInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=value).value', 'positiveInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=array).array', 'positiveInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=where).where.where(code=value).value', 'positiveInt' , 'max');
+SELECT fhirpath_as_number(:resource, '.positiveInt.where(code=where).where.where(code=array).array', 'positiveInt' , 'max');

@@ -22,3 +22,8 @@ SELECT fhirpath_as_number('{"a":{"b": {"array": [40, 42, 39]}}}', '.a.b.array', 
      42.1
 (1 row)
 
+SELECT fhirpath_as_number('{"a":{"where": [{"code": "where", "value": 42}]}}', '.a.where.where(code=where).value', 'integer', 'max') + 0.1;
+ ?column? 
+----------
+     42.1
+(1 row)
