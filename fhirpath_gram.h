@@ -40,42 +40,40 @@
       know about them.  */
    enum yytokentype {
      WHERE_P = 258,
-     IN_P = 259,
-     IS_P = 260,
-     OR_P = 261,
-     AND_P = 262,
-     NOT_P = 263,
-     NULL_P = 264,
-     TRUE_P = 265,
-     ARRAY_T = 266,
-     FALSE_P = 267,
-     NUMERIC_T = 268,
-     OBJECT_T = 269,
-     STRING_T = 270,
-     BOOLEAN_T = 271,
-     PIPE_P = 272,
-     STRING_P = 273,
-     NUMERIC_P = 274
+     NULL_P = 259,
+     TRUE_P = 260,
+     FALSE_P = 261,
+     NUMERIC_T = 262,
+     OBJECT_T = 263,
+     STRING_T = 264,
+     BOOLEAN_T = 265,
+     PIPE_P = 266,
+     STRING_P = 267,
+     NUMERIC_P = 268,
+     OR_P = 269,
+     AND_P = 270,
+     NOT_P = 271,
+     IS_P = 272,
+     IN_P = 273
    };
 #endif
 /* Tokens.  */
 #define WHERE_P 258
-#define IN_P 259
-#define IS_P 260
-#define OR_P 261
-#define AND_P 262
-#define NOT_P 263
-#define NULL_P 264
-#define TRUE_P 265
-#define ARRAY_T 266
-#define FALSE_P 267
-#define NUMERIC_T 268
-#define OBJECT_T 269
-#define STRING_T 270
-#define BOOLEAN_T 271
-#define PIPE_P 272
-#define STRING_P 273
-#define NUMERIC_P 274
+#define NULL_P 259
+#define TRUE_P 260
+#define FALSE_P 261
+#define NUMERIC_T 262
+#define OBJECT_T 263
+#define STRING_T 264
+#define BOOLEAN_T 265
+#define PIPE_P 266
+#define STRING_P 267
+#define NUMERIC_P 268
+#define OR_P 269
+#define AND_P 270
+#define NOT_P 271
+#define IS_P 272
+#define IN_P 273
 
 
 
@@ -90,7 +88,7 @@ typedef union YYSTYPE
 	FhirpathParseItem	*value;
 }
 /* Line 1529 of yacc.c.  */
-#line 94 "fhirpath_gram.h"
+#line 92 "fhirpath_gram.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

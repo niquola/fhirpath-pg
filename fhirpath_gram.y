@@ -166,8 +166,8 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	FhirpathParseItem	*value;
 }
 
-%token	<str>		WHERE_P IN_P IS_P OR_P AND_P NOT_P NULL_P TRUE_P
-					ARRAY_T FALSE_P NUMERIC_T OBJECT_T
+%token	<str>		WHERE_P NULL_P TRUE_P
+					FALSE_P NUMERIC_T OBJECT_T
 					STRING_T BOOLEAN_T PIPE_P
 
 %token	<str>		STRING_P NUMERIC_P
