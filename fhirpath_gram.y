@@ -177,6 +177,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 %type	<elems>		path
 
 %type 	<value>		key
+%type 	<str>    	string_key
 
 %left OR_P 
 %left AND_P 
@@ -203,13 +204,19 @@ expr:
  */
 
 key:
-    WHERE_P '(' STRING_P '=' STRING_P ')'   { $$ = makeItemOp(fpEqual, makeItemString(&$3), makeItemString(&$5)); }
-    | STRING_P		        				{ $$ = makeItemKey(&$1); }
+    WHERE_P '(' string_key '=' string_key ')'   { $$ = makeItemOp(fpEqual, makeItemString(&$3), makeItemString(&$5)); }
+	| string_key	        				    { $$ = makeItemKey(&$1);}
 	;
+
+string_key:
+  WHERE_P                  				    { string s = {"where", 5}; $$ = s; }
+  | STRING_P		        				{ $$ = $1; }
+  ;
+
 
 path:
 	'.' key							{ $$ = lappend(NIL, $2); }
-    | STRING_P '.' key    			{ $$ = lappend(lappend(NIL, makeResourceType(&$1)), $3); }
+    | string_key '.' key   			{ $$ = lappend(lappend(NIL, makeResourceType(&$1)), $3); }
 	| path '.' key   				{ $$ = lappend($1, $3); }
 	;
 

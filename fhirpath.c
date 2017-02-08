@@ -265,7 +265,7 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		next_v = jsonb_get_key(key, jbv);
 
 		fpGetRightArg(path_item, &next_item);
-
+		
 		if(next_v != NULL &&  checkScalarEquality(&next_item, next_v)){
 			if (fpGetNext(path_item, &next_item)) {
 				num_results += reduce_fhirpath(jbv, &next_item, acc, fn);
