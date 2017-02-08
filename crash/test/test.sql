@@ -49,6 +49,23 @@ select '''{
         ]
       }
     ]
+  },
+  "decimal":{
+    "value": 58.1,
+    "array": [41, 59.1999, 43],
+    "where": [
+      {
+        "code": "value", "value": 60.7878
+      }, {
+        "code": "array", "array": [45, 61.999, 47]
+      }, {
+        "code": "where",
+        "where": [
+          {"code": "value", "value": 62.3434},
+          {"code": "array", "array": [49, 63.3344, 31]}
+        ]
+      }
+    ]
   }
 }''' resource \gset
 create or replace function r(error_message text) returns void as $$
@@ -92,3 +109,15 @@ DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.where.where(code=wh
 SELECT fhirpath_as_number(:resource, '.positiveInt.where.where(code=where).where.where(code=value).value', 'positiveInt' , 'max');
 DO language plpgsql $$ BEGIN RAISE info 'number .positiveInt.where.where(code=where).where.where(code=array).array positiveInt'; END $$;
 SELECT fhirpath_as_number(:resource, '.positiveInt.where.where(code=where).where.where(code=array).array', 'positiveInt' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.value decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.value', 'decimal' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.array decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.array', 'decimal' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.where.where(code=value).value decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.where.where(code=value).value', 'decimal' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.where.where(code=array).array decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.where.where(code=array).array', 'decimal' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.where.where(code=where).where.where(code=value).value decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.where.where(code=where).where.where(code=value).value', 'decimal' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'number .decimal.where.where(code=where).where.where(code=array).array decimal'; END $$;
+SELECT fhirpath_as_number(:resource, '.decimal.where.where(code=where).where.where(code=array).array', 'decimal' , 'max');

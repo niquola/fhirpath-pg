@@ -49,6 +49,23 @@
         ]
       }
     ]
+  },
+  "decimal":{
+    "value": 58.1,
+    "array": [41, 59.1999, 43],
+    "where": [
+      {
+        "code": "value", "value": 60.7878
+      }, {
+        "code": "array", "array": [45, 61.999, 47]
+      }, {
+        "code": "where",
+        "where": [
+          {"code": "value", "value": 62.3434},
+          {"code": "array", "array": [49, 63.3344, 31]}
+        ]
+      }
+    ]
   }
 }
 
