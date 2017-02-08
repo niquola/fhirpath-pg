@@ -16,3 +16,8 @@ SELECT fhirpath_as_number('{ "number":{"value": [1, 42, 5]}, "date": {"value": "
                   1
 (1 row)
 
+SELECT fhirpath_as_number('{"a":{"b": {"array": [40, 42, 39]}}}', '.a.b.array', 'decimal', 'max') + 0.1;
+ fhirpath_as_number 
+--------------------
+                42.1
+(1 row)

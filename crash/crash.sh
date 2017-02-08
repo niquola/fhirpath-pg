@@ -32,9 +32,9 @@ function mk_query() {
   local	DATA_TYPE=$3
 	local MODIFICATION=""
 
-	if [ -n "$4" ]
+	if [ "$SEARCH_TYPE" == number ] || [ "$SEARCH_TYPE" == date ]
 	then
-		MODIFICATION=", '$4'"
+		MODIFICATION=", 'max'"
 	fi
 
   echo "SELECT fhirpath_as_$SEARCH_TYPE(:resource, '$PTH', '$DATA_TYPE' $MODIFICATION);"
@@ -48,12 +48,7 @@ do
 	do
 		for p in "${PATHS[@]}"
 		do
-			if [ "$st" == number ] || [ "$st" == date ]
-			then
-				SQL=$(mk_query $st $p $dt "min")
-			else
-				SQL=$(mk_query $st $p $dt)
-			fi
+			SQL=$(mk_query $st $p $dt)
 			echo $SQL
 		done
 	done
