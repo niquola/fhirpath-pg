@@ -3,9 +3,6 @@ set -e
 
 source ./test.cfg
 
-RESOURCE=$(<resource.json)
-
-
 function mk_query() {
 	local SEARCH_TYPE=$1
   local PTH=$2
@@ -17,7 +14,6 @@ function mk_query() {
     MODIFICATION=", 'max'"
   fi
 
-	#echo "select r('$SEARCH_TYPE, $PTH, $DATA_TYPE');"
 	echo "DO language plpgsql \$\$ BEGIN RAISE info '$SEARCH_TYPE $PTH $DATA_TYPE'; END \$\$;"
   echo "SELECT fhirpath_as_$SEARCH_TYPE(:resource, '$PTH', '$DATA_TYPE' $MODIFICATION);"
 }
@@ -34,21 +30,23 @@ function gen_pths() {
 	echo "${paths[@]}"
 }
 
-
-echo "select '''$RESOURCE''' resource \\gset"
-echo "create or replace function r(error_message text) returns void as \$\$
-				begin
-					raise info '%', error_message;
-				end;
-			\$\$ language plpgsql;"
-
 for data_type in "${NUMBER[@]}"
 do
-  paths=($(gen_pths $data_type))
-  for path in "${paths[@]}"
-  do
-    mk_query "number" $path $data_type
-  done
+	_value=$data_type"_value"
+	_array=$data_type"_array"
+	value=""
+	array=""
+	eval "value=\$$_value"
+	eval "array=\$$_array"
+	if [ -n "$value" ]; then
+		RESOURCE="$(printf  "$TEMPLATE" "$data_type" "$value" "$array" "$value" "$array" "$value" "$array")"
+		echo "select '''$RESOURCE''' resource \\gset"
+		paths=($(gen_pths $data_type))
+		for path in "${paths[@]}"
+		do
+			mk_query "number" $path $data_type
+		done
+	fi
 done
 
 
