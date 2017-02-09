@@ -501,3 +501,153 @@ DO language plpgsql $$ BEGIN RAISE info 'number .Money.where.where(code=where).w
 SELECT fhirpath_as_number(:resource, '.Money.where.where(code=where).where.where(code=value).value', 'Money' , 'max');
 DO language plpgsql $$ BEGIN RAISE info 'number .Money.where.where(code=where).where.where(code=array).array Money'; END $$;
 SELECT fhirpath_as_number(:resource, '.Money.where.where(code=where).where.where(code=array).array', 'Money' , 'max');
+select '''{
+  "date":{
+    "value": "1991-12",
+    "array": ["1985-05", "1991-12", "1989-05"],
+    "where": [{ "code": "value", "value": "1991-12" },
+              { "code": "array", "array": ["1985-05", "1991-12", "1989-05"] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": "1991-12"},
+                           {"code": "array", "array": ["1985-05", "1991-12", "1989-05"]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .date.value date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.value', 'date' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .date.array date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.array', 'date' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .date.where.where(code=value).value date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.where.where(code=value).value', 'date' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .date.where.where(code=array).array date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.where.where(code=array).array', 'date' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .date.where.where(code=where).where.where(code=value).value date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.where.where(code=where).where.where(code=value).value', 'date' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .date.where.where(code=where).where.where(code=array).array date'; END $$;
+SELECT fhirpath_as_date(:resource, '.date.where.where(code=where).where.where(code=array).array', 'date' , 'max');
+select '''{
+  "dateTime":{
+    "value": "1991-12-31",
+    "array": ["1981-11-12", "1991-12-31", "1990-12-31"],
+    "where": [{ "code": "value", "value": "1991-12-31" },
+              { "code": "array", "array": ["1981-11-12", "1991-12-31", "1990-12-31"] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": "1991-12-31"},
+                           {"code": "array", "array": ["1981-11-12", "1991-12-31", "1990-12-31"]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.value dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.value', 'dateTime' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.array dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.array', 'dateTime' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.where.where(code=value).value dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.where.where(code=value).value', 'dateTime' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.where.where(code=array).array dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.where.where(code=array).array', 'dateTime' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.where.where(code=where).where.where(code=value).value dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.where.where(code=where).where.where(code=value).value', 'dateTime' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .dateTime.where.where(code=where).where.where(code=array).array dateTime'; END $$;
+SELECT fhirpath_as_date(:resource, '.dateTime.where.where(code=where).where.where(code=array).array', 'dateTime' , 'max');
+select '''{
+  "instant":{
+    "value": "2002-05-20T09:00:00",
+    "array": ["2002-02-10T09:00:00", "2002-05-20T09:00:00", "2002-01-30T09:00:00"],
+    "where": [{ "code": "value", "value": "2002-05-20T09:00:00" },
+              { "code": "array", "array": ["2002-02-10T09:00:00", "2002-05-20T09:00:00", "2002-01-30T09:00:00"] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": "2002-05-20T09:00:00"},
+                           {"code": "array", "array": ["2002-02-10T09:00:00", "2002-05-20T09:00:00", "2002-01-30T09:00:00"]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.value instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.value', 'instant' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.array instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.array', 'instant' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.where.where(code=value).value instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.where.where(code=value).value', 'instant' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.where.where(code=array).array instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.where.where(code=array).array', 'instant' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.where.where(code=where).where.where(code=value).value instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.where.where(code=where).where.where(code=value).value', 'instant' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .instant.where.where(code=where).where.where(code=array).array instant'; END $$;
+SELECT fhirpath_as_date(:resource, '.instant.where.where(code=where).where.where(code=array).array', 'instant' , 'max');
+select '''{
+  "time":{
+    "value": "11:00:00",
+    "array": ["09:00:00", "11:00:00", "08:00:00"],
+    "where": [{ "code": "value", "value": "11:00:00" },
+              { "code": "array", "array": ["09:00:00", "11:00:00", "08:00:00"] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": "11:00:00"},
+                           {"code": "array", "array": ["09:00:00", "11:00:00", "08:00:00"]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .time.value time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.value', 'time' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .time.array time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.array', 'time' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .time.where.where(code=value).value time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.where.where(code=value).value', 'time' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .time.where.where(code=array).array time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.where.where(code=array).array', 'time' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .time.where.where(code=where).where.where(code=value).value time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.where.where(code=where).where.where(code=value).value', 'time' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .time.where.where(code=where).where.where(code=array).array time'; END $$;
+SELECT fhirpath_as_date(:resource, '.time.where.where(code=where).where.where(code=array).array', 'time' , 'max');
+select '''{
+  "Period":{
+    "value": {"start": "1991-01-01", "end": "1991-12-31"},
+    "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+							 {"start": "1990-01-01", "end": "1991-12-31"},
+							 {"start": "1981-01-01"}],
+    "where": [{ "code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"} },
+              { "code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+							 {"start": "1990-01-01", "end": "1991-12-31"},
+							 {"start": "1981-01-01"}] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"}},
+                           {"code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+							 {"start": "1990-01-01", "end": "1991-12-31"},
+							 {"start": "1981-01-01"}]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.value Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.value', 'Period' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.array Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.where.where(code=value).value Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=value).value', 'Period' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.where.where(code=array).array Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Period' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.where.where(code=where).where.where(code=value).value Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=value).value', 'Period' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Period.where.where(code=where).where.where(code=array).array Period'; END $$;
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=array).array', 'Period' , 'max');
+select '''{
+  "Timing":{
+    "value": {"event": ["1991-01-01", "1992-01-01"]},
+    "array": [{"event": ["1991-01-01"]},
+							 {"event": ["2000-01-01", "1990-01-01"]},
+							 {"event": ["1992-01-01"]}],
+    "where": [{ "code": "value", "value": {"event": ["1991-01-01", "1992-01-01"]} },
+              { "code": "array", "array": [{"event": ["1991-01-01"]},
+							 {"event": ["2000-01-01", "1990-01-01"]},
+							 {"event": ["1992-01-01"]}] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": {"event": ["1991-01-01", "1992-01-01"]}},
+                           {"code": "array", "array": [{"event": ["1991-01-01"]},
+							 {"event": ["2000-01-01", "1990-01-01"]},
+							 {"event": ["1992-01-01"]}]} ] } ] },
+  "noise": "Some value"
+}''' resource \gset
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.value Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.value', 'Timing' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.array Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.array', 'Timing' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.where.where(code=value).value Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=value).value', 'Timing' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.where.where(code=array).array Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=array).array', 'Timing' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.where.where(code=where).where.where(code=value).value Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=value).value', 'Timing' , 'max');
+DO language plpgsql $$ BEGIN RAISE info 'date .Timing.where.where(code=where).where.where(code=array).array Timing'; END $$;
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=array).array', 'Timing' , 'max');

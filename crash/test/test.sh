@@ -30,23 +30,29 @@ function gen_pths() {
 	echo "${paths[@]}"
 }
 
-for data_type in "${NUMBER[@]}"
+#SEARCH_TYPES=(number date)
+SEARCH_TYPES=(number date)
+for search_type in "${SEARCH_TYPES[@]}"
 do
-	_value=$data_type"_value"
-	_array=$data_type"_array"
-	value=""
-	array=""
-	eval "value=\$$_value"
-	eval "array=\$$_array"
-	if [ -n "$value" ]; then
-		RESOURCE="$(printf  "$TEMPLATE" "$data_type" "$value" "$array" "$value" "$array" "$value" "$array")"
-		echo "select '''$RESOURCE''' resource \\gset"
-		paths=($(gen_pths $data_type))
-		for path in "${paths[@]}"
-		do
-			mk_query "number" $path $data_type
-		done
-	fi
+  eval DATA_TYPES=( \${$search_type[@]} ) ;
+	for data_type in "${DATA_TYPES[@]}"
+	do
+		_value=$data_type"_value"
+		_array=$data_type"_array"
+		value=""
+		array=""
+		eval "value=\$$_value"
+		eval "array=\$$_array"
+		if [ -n "$value" ]; then
+			RESOURCE="$(printf  "$TEMPLATE" "$data_type" "$value" "$array" "$value" "$array" "$value" "$array")"
+			echo "select '''$RESOURCE''' resource \\gset"
+			paths=($(gen_pths $data_type))
+			for path in "${paths[@]}"
+			do
+				mk_query $search_type $path $data_type
+			done
+		fi
+	done
 done
 
 
