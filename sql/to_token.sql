@@ -68,3 +68,4 @@ SELECT fhirpath_as_token('{"a": false}', '.a', 'boolean') from as_token_test;
 SELECT fhirpath_as_token('{"a": "ups"}', '.a', 'boolean') from as_token_test;
 SELECT fhirpath_as_token('{"a": 1234}', '.a', 'integer') from as_token_test;
 SELECT fhirpath_as_token('{"a": 1234.1}', '.a', 'integer') from as_token_test;
+SELECT fhirpath_as_token('{"a": {"value": 1234}}', '.a', 'Identifier') from as_token_test;

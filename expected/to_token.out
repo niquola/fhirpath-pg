@@ -141,3 +141,9 @@ SELECT fhirpath_as_token('{"a": 1234.1}', '.a', 'integer') from as_token_test;
  {1234.1}
 (1 row)
 
+SELECT fhirpath_as_token('{"a": {"value": 1234}}', '.a', 'Identifier') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {1234}
+(1 row)
+

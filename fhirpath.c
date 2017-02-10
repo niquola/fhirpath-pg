@@ -150,7 +150,8 @@ jsonb_string_as_text(JsonbValue *value) {
 /* return string value of key of obj as pg text */
 text *
 get_text_key(JsonbValue *obj, char *key) {
-	return jsonb_string_as_text(jsonb_get_key(key, obj));
+	/* return jsonb_string_as_text(jsonb_get_key(key, obj)); */
+	return jsonbv_to_text(NULL, jsonb_get_key(key, obj));
 }
 
 static bool
@@ -198,6 +199,9 @@ char *jsonbv_to_string(StringInfoData *out, JsonbValue *v){
 }
 
 text *jsonbv_to_text(StringInfoData *out, JsonbValue *v){
+	if (v == NULL) 
+		return NULL;
+
 	if (out == NULL)
 		out = makeStringInfo();
 
