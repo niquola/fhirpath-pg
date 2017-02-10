@@ -14,7 +14,7 @@ function mk_query() {
     MODIFICATION=", 'max'"
   fi
 
-	echo "DO language plpgsql \$\$ BEGIN RAISE info '$SEARCH_TYPE $PTH $DATA_TYPE'; END \$\$;"
+	#echo "DO language plpgsql \$\$ BEGIN RAISE info '$SEARCH_TYPE $PTH $DATA_TYPE'; END \$\$;"
   echo "SELECT fhirpath_as_$SEARCH_TYPE(:resource, '$PTH', '$DATA_TYPE' $MODIFICATION);"
 }
 
@@ -30,8 +30,8 @@ function gen_pths() {
 	echo "${paths[@]}"
 }
 
-#SEARCH_TYPES=(number date string)
-SEARCH_TYPES=(string)
+SEARCH_TYPES=(number date string)
+#SEARCH_TYPES=(string)
 for search_type in "${SEARCH_TYPES[@]}"
 do
   eval DATA_TYPES=( \${$search_type[@]} ) ;
