@@ -982,6 +982,40 @@ void reduce_as_date(void *acc, JsonbValue *val){
 			elog(ERROR, "expected min or max value");
 		}
 
+	} else {
+		if(strcmp(dacc->element_type, "Period") == 0){
+			JsonbValue *prop;
+			Datum inf;
+			/* elog(INFO, "Period: datetime from %s", jsonbv_to_string(NULL, prop)); */
+			if(dacc->minmax == min){
+				prop = jsonb_get_key("start", val);
+				if(prop != NULL) {
+					reduce_as_date(acc, prop);
+				} else {
+					/* inifity case */
+					TIMESTAMP_NOBEGIN(inf);
+					dacc->acc = inf;
+				}
+			} else {
+				prop = jsonb_get_key("end", val);
+				if(prop != NULL) {
+					reduce_as_date(acc, prop);
+				} else {
+					/* inifity case */
+					TIMESTAMP_NOEND(inf);
+					dacc->acc = inf;
+				}
+			}
+		} else if(strcmp(dacc->element_type, "Timing") == 0){
+			JsonbValue *prop;
+			prop = jsonb_get_key("event", val);
+			/* elog(INFO, "Timing: datetime from %s", jsonbv_to_string(NULL, prop)); */
+			if(prop != NULL) {
+				reduce_jsonb_array(prop, acc, reduce_as_date);
+			}
+		} else {
+			elog(WARNING, "I do not know how to get datetime from %s", jsonbv_to_string(NULL, val));
+		}
 	}
 
 }

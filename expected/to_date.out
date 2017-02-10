@@ -1,78 +1,317 @@
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Jan 01 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Fri Feb 01 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'min'); 
+SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Sun Feb 03 00:00:00 1952 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Thu Jan 01 00:00:00 1981 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Sat Mar 01 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Wed Feb 06 00:00:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:59:59 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:59 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30+05"}}}', '.a.b.c', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30+05"}}}', '.a.b.c', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Mon Feb 04 19:30:00 1980 PST
 (1 row)
 
-SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'max'); 
+SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'max');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:59 1980 PST
+(1 row)
+
+--- time
+SELECT fhirpath_as_date('{"time": "11:00:00" }', '.time', 'time' , 'max');
+ERROR:  invalid input syntax for type timestamp with time zone: "11:00:0001T00:00:00"
+SELECT fhirpath_as_date('{"time": "11:00:00" }', '.time', 'time' , 'min');
+ERROR:  invalid input syntax for type timestamp with time zone: "11:00:0001T00:00:00"
+SELECT fhirpath_as_date('{"time": "23:59:59" }', '.time', 'time' , 'max');
+ERROR:  date/time field value out of range: "23:59:5901T00:00:00"
+SELECT fhirpath_as_date('{"time": "00:00:01" }', '.time', 'time' , 'min');
+ERROR:  date/time field value out of range: "00:00:0101T00:00:00"
+SELECT fhirpath_as_date('{"time": ["11:00:00", "12:00:00", "13:00:00"] }', '.time', 'time' , 'max');
+ERROR:  invalid input syntax for type timestamp with time zone: "11:00:0001T00:00:00"
+SELECT fhirpath_as_date('{"time": ["11:00:00", "12:00:00", "13:00:00"] }', '.time', 'time' , 'min');
+ERROR:  invalid input syntax for type timestamp with time zone: "11:00:0001T00:00:00"
+SELECT fhirpath_as_date('{"time": ["23:59:59", "11:00:00", "12:00:00"] }', '.time', 'time' , 'max');
+ERROR:  date/time field value out of range: "23:59:5901T00:00:00"
+SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "12:00:00"] }', '.time', 'time' , 'min');
+ERROR:  date/time field value out of range: "00:00:0101T00:00:00"
+SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "23:59:59"] }', '.time', 'time' , 'min');
+ERROR:  date/time field value out of range: "00:00:0101T00:00:00"
+SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "23:59:59"] }', '.time', 'time' , 'max');
+ERROR:  date/time field value out of range: "00:00:0101T00:00:00"
+--- Period
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 01 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Jan 01 00:00:00 1991 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'max');
+ fhirpath_as_date 
+------------------
+ infinity
+(1 row)
+
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Jan 01 00:00:00 1991 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 02 00:00:00 1991 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'min');
+ fhirpath_as_date 
+------------------
+ -infinity
+(1 row)
+
+SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
+                                     {"start": "1991-01-01", "end": "1991-12-31"},
+                                     {"end":   "1991-12-31"}]}', '.period', 'Period' , 'max');
+ fhirpath_as_date 
+------------------
+ infinity
+(1 row)
+
+SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
+                                     {"start": "1991-01-01", "end": "1991-12-31"},
+                                     {"end":   "1991-12-31"}]}', '.period', 'Period' , 'min');
+ fhirpath_as_date 
+------------------
+ -infinity
+(1 row)
+
+select '''{
+  "Period":{
+    "value": {"start": "1991-01-01", "end": "1991-12-31"},
+    "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+ 						  {"start": "1990-01-01", "end": "1991-12-31"},
+							{"start": "1981-01-01"}],
+    "where": [{ "code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"} },
+              { "code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+																					 {"start": "1990-01-01", "end": "1991-12-31"},
+																					 {"start": "1981-01-01"}] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"}},
+                           {"code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+																											 {"start": "1990-01-01", "end": "1991-12-31"},
+																											 {"start": "1981-01-01"}]} ] } ] }
+}''' resource \gset
+SELECT fhirpath_as_date(:resource, '.Period.value', 'Period' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 01 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
+ fhirpath_as_date 
+------------------
+ infinity
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=value).value', 'Period' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 01 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Period' , 'max');
+ fhirpath_as_date 
+------------------
+ infinity
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=value).value', 'Period' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 01 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=array).array', 'Period' , 'max');
+ fhirpath_as_date 
+------------------
+ infinity
+(1 row)
+
+--- Timing
+SELECT fhirpath_as_date('{"timing": {"event": ["1992-12-31"]}}', '.timing', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Fri Jan 01 00:00:00 1993 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": {"event": ["1992-10-10"]}}', '.timing', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sun Oct 11 00:00:00 1992 PDT
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-01"]}}', '.timing', 'Timing' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Jan 01 00:00:00 1991 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-04"]}}', '.timing', 'Timing' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Fri Jan 04 00:00:00 1991 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": {"event": ["1993-01-01", "1992-12-31"]}}', '.timing', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sat Jan 02 00:00:00 1993 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": {"event": ["1993-01-01", "1992-12-31"]}}', '.timing', 'Timing' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Thu Dec 31 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1992-12-31"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sun Jan 01 00:00:00 1995 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1992-01-01"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Wed Jan 01 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1991-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Mon Jan 01 00:00:00 1996 PST
+(1 row)
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1987-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
+       fhirpath_as_date       
+------------------------------
+ Thu Jan 01 00:00:00 1987 PST
+(1 row)
+
+select '''{
+  "Timing":{
+    "value": {"event": ["1991-01-01", "1992-01-01"]},
+    "array": [{"event": ["1991-01-01"]},
+						  {"event": ["2000-01-01", "1990-01-01"]},
+						  {"event": ["1992-01-01"]}],
+    "where": [{ "code": "value", "value": {"event": ["1991-01-01", "1992-01-01"]} },
+              { "code": "array", "array": [{"event": ["1991-01-01"]},
+																					 {"event": ["2000-01-01", "1990-01-01"]},
+																					 {"event": ["1992-01-01"]}] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": {"event": ["1991-01-01", "1992-01-01"]}},
+                           {"code": "array", "array": [{"event": ["1991-01-01"]},
+																											 {"event": ["2000-01-01", "1990-01-01"]},
+																											 {"event": ["1992-01-01"]}]} ] } ] }
+}''' resource \gset
+SELECT fhirpath_as_date(:resource, '.Timing.value', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Thu Jan 02 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Timing.array', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sun Jan 02 00:00:00 2000 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=value).value', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Thu Jan 02 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=array).array', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sun Jan 02 00:00:00 2000 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=value).value', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Thu Jan 02 00:00:00 1992 PST
+(1 row)
+
+SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=array).array', 'Timing' , 'max');
+       fhirpath_as_date       
+------------------------------
+ Sun Jan 02 00:00:00 2000 PST
 (1 row)
 

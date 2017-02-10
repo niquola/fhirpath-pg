@@ -29,6 +29,48 @@ SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "23:59:59"] }', '.tim
 SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "23:59:59"] }', '.time', 'time' , 'max');
 
 
+--- Period
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'max');
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'min');
+
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'max');
+SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'min');
+
+SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'max');
+SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'min');
+
+SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
+                                     {"start": "1991-01-01", "end": "1991-12-31"},
+                                     {"end":   "1991-12-31"}]}', '.period', 'Period' , 'max');
+SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
+                                     {"start": "1991-01-01", "end": "1991-12-31"},
+                                     {"end":   "1991-12-31"}]}', '.period', 'Period' , 'min');
+
+
+select '''{
+  "Period":{
+    "value": {"start": "1991-01-01", "end": "1991-12-31"},
+    "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+ 						  {"start": "1990-01-01", "end": "1991-12-31"},
+							{"start": "1981-01-01"}],
+    "where": [{ "code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"} },
+              { "code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+																					 {"start": "1990-01-01", "end": "1991-12-31"},
+																					 {"start": "1981-01-01"}] },
+              { "code": "where",
+                "where": [ {"code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"}},
+                           {"code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
+																											 {"start": "1990-01-01", "end": "1991-12-31"},
+																											 {"start": "1981-01-01"}]} ] } ] }
+}''' resource \gset
+
+SELECT fhirpath_as_date(:resource, '.Period.value', 'Period' , 'max');
+SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=value).value', 'Period' , 'max');
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Period' , 'max');
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=value).value', 'Period' , 'max');
+SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=array).array', 'Period' , 'max');
+
 --- Timing
 SELECT fhirpath_as_date('{"timing": {"event": ["1992-12-31"]}}', '.timing', 'Timing' , 'max');
 SELECT fhirpath_as_date('{"timing": {"event": ["1992-10-10"]}}', '.timing', 'Timing' , 'max');
@@ -66,45 +108,3 @@ SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=value).value', 'Tim
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=array).array', 'Timing' , 'max');
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=value).value', 'Timing' , 'max');
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=array).array', 'Timing' , 'max');
-
---- Period
-SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'max');
-SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'min');
-
-SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'max');
-SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Period' , 'min');
-
-SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'max');
-SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'min');
-
-SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
-                                     {"start": "1991-01-01", "end": "1991-12-31"},
-                                     {"end":   "1991-12-31"]}', '.period', 'Period' , 'max');
-SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
-                                     {"start": "1991-01-01", "end": "1991-12-31"},
-                                     {"end":   "1991-12-31"]}', '.period', 'Period' , 'min');
-
-
-select '''{
-  "Period":{
-    "value": {"start": "1991-01-01", "end": "1991-12-31"},
-    "array": [{"start": "1991-01-01", "end": "1991-12-31"},
- 						  {"start": "1990-01-01", "end": "1991-12-31"},
-							{"start": "1981-01-01"}],
-    "where": [{ "code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"} },
-              { "code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
-																					 {"start": "1990-01-01", "end": "1991-12-31"},
-																					 {"start": "1981-01-01"}] },
-              { "code": "where",
-                "where": [ {"code": "value", "value": {"start": "1991-01-01", "end": "1991-12-31"}},
-                           {"code": "array", "array": [{"start": "1991-01-01", "end": "1991-12-31"},
-																											 {"start": "1990-01-01", "end": "1991-12-31"},
-																											 {"start": "1981-01-01"}]} ] } ] }
-}''' resource \gset
-
-SELECT fhirpath_as_date(:resource, '.Period.value', 'Period' , 'max');
-SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
-SELECT fhirpath_as_date(:resource, '.Period.where.where(code=value).value', 'Period' , 'max');
-SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Period' , 'max');
-SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=value).value', 'Period' , 'max');
-SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=array).array', 'Period' , 'max');
