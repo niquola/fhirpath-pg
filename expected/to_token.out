@@ -96,7 +96,7 @@ SELECT fhirpath_as_token(resource, '.identifier.type.coding', 'Coding') from as_
 SELECT fhirpath_as_token(resource, '.organization', 'Reference') from as_token_test;
  fhirpath_as_token 
 -------------------
- {Organization/1}
+ {organization/1}
 (1 row)
 
 SELECT fhirpath_as_token(resource, '.quantity', 'Quantity') from as_token_test;
@@ -163,5 +163,18 @@ SELECT fhirpath_as_token(resource, $FP$.telecom.where(use="work")$FP$, 'ContactP
                 fhirpath_as_token                
 -------------------------------------------------
  {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+(1 row)
+
+-- test lowering
+SELECT fhirpath_as_token('{"a": "AAAA"}', '.a', 'string') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {aaaa}
+(1 row)
+
+SELECT fhirpath_as_token('{"coding": {"code": "CC", "system": "SYS"}}', '.coding', 'Coding') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {cc,sys,sys|cc}
 (1 row)
 

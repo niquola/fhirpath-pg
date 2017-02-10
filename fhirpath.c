@@ -592,6 +592,7 @@ fhirpath_as_string(PG_FUNCTION_ARGS) {
 typedef struct ArrayAccumulator {
 	char	*element_type;
 	ArrayBuildState *acc;
+	bool case_insensitive;
 } ArrayAccumulator;
 
 
@@ -602,10 +603,20 @@ appendStringInfoText(StringInfo str, const text *t)
 	appendBinaryStringInfo(str, VARDATA_ANY(t), VARSIZE_ANY_EXHDR(t));
 }
 
+static text* text_lower(text *t){
+	if(t != NULL) {
+		return cstring_to_text_with_len(str_tolower(VARDATA_ANY(t), VARSIZE_ANY_EXHDR(t), DEFAULT_COLLATION_OID), VARSIZE_ANY_EXHDR(t));
+	}
+	return NULL;
+}
+
 static void
 append_token(ArrayAccumulator *acc, text *token) {
-	if( token != NULL )
-		acc->acc = accumArrayResult(acc->acc, (Datum)token, false, TEXTOID, CurrentMemoryContext);
+	if( token != NULL ) {
+		acc->acc = accumArrayResult(acc->acc,
+									(Datum) (acc->case_insensitive ? text_lower(token) : token),
+									false, TEXTOID, CurrentMemoryContext);
+	}
 }
 
 static void
@@ -718,6 +729,7 @@ fhirpath_as_token(PG_FUNCTION_ARGS) {
 	ArrayAccumulator acc;
 	acc.element_type = type;
 	acc.acc = NULL;
+	acc.case_insensitive = true;
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_token);
 
@@ -774,6 +786,7 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 	ArrayAccumulator acc;
 	acc.element_type = type;
 	acc.acc = NULL;
+	acc.case_insensitive = false;
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_reference);
 

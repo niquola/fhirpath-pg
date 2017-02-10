@@ -73,3 +73,7 @@ SELECT fhirpath_as_token('{"a": {"value": 1234}}', '.a', 'Identifier') from as_t
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use='work')$FP$, 'ContactPoint') from as_token_test;
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use=work)$FP$, 'ContactPoint') from as_token_test;
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use="work")$FP$, 'ContactPoint') from as_token_test;
+
+-- test lowering
+SELECT fhirpath_as_token('{"a": "AAAA"}', '.a', 'string') from as_token_test;
+SELECT fhirpath_as_token('{"coding": {"code": "CC", "system": "SYS"}}', '.coding', 'Coding') from as_token_test;
