@@ -8,3 +8,4 @@ SELECT fhirpath_as_string(:pt, '.name.where(use=official).family', 'HumanName');
 SELECT fhirpath_as_string(:pt, '.name.where(use=common).family', 'HumanName');
 
 SELECT fhirpath_as_string('{"name": [{"use": "SKIP", "period": {"start":  "SKIP", "end": "SKIP"}, "street": ["f1", "f2"]}]}', '.name', 'Address');
+SELECT fhirpath_as_string('{"a": 222}', '.a', 'Numeric');

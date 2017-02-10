@@ -497,7 +497,7 @@ void reduce_jsonb_as_strings(JsonbValue *jbv, void *acc, reduce_fn fn) {
 				}
 			}
 		}
-	} else if (jbv->type == jbvString ){
+	} else if (jbv->type == jbvString  || jbv->type == jbvNumeric){
 		fn(acc, jbv);
 	}
 }

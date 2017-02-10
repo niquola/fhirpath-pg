@@ -41,3 +41,9 @@ SELECT fhirpath_as_string('{"name": [{"use": "SKIP", "period": {"start":  "SKIP"
  $f1$f2$
 (1 row)
 
+SELECT fhirpath_as_string('{"a": 222}', '.a', 'Numeric');
+ fhirpath_as_string 
+--------------------
+ $222$
+(1 row)
+
