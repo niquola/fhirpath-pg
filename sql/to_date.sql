@@ -27,14 +27,17 @@ SELECT fhirpath_as_date('{"time": ["23:59:59", "11:00:00", "12:00:00"] }', '.tim
 SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "12:00:00"] }', '.time', 'time' , 'min');
 
 
-
 --- Timing
-
-
 SELECT fhirpath_as_date('{"timing": {"event": ["1992-12-31"]}}', '.timing', 'Timing' , 'max');
 SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-01"]}}', '.timing', 'Timing' , 'min');
 SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-01", "1992-12-31"]}}', '.Timing.value', 'Timing' , 'max');
 SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-01", "1992-12-31"]}}', '.Timing.value', 'Timing' , 'min');
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1992-12-31"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
+SELECT fhirpath_as_date('{"timing": [{"event": ["1992-01-01"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
+
+SELECT fhirpath_as_date('{"timing": [{"event": ["1991-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
+SELECT fhirpath_as_date('{"timing": [{"event": ["1987-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
 
 select '''{
   "Timing":{
