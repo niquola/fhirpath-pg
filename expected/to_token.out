@@ -147,3 +147,21 @@ SELECT fhirpath_as_token('{"a": {"value": 1234}}', '.a', 'Identifier') from as_t
  {1234}
 (1 row)
 
+SELECT fhirpath_as_token(resource, $FP$.telecom.where(use='work')$FP$, 'ContactPoint') from as_token_test;
+                fhirpath_as_token                
+-------------------------------------------------
+ {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+(1 row)
+
+SELECT fhirpath_as_token(resource, $FP$.telecom.where(use=work)$FP$, 'ContactPoint') from as_token_test;
+                fhirpath_as_token                
+-------------------------------------------------
+ {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+(1 row)
+
+SELECT fhirpath_as_token(resource, $FP$.telecom.where(use="work")$FP$, 'ContactPoint') from as_token_test;
+                fhirpath_as_token                
+-------------------------------------------------
+ {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+(1 row)
+

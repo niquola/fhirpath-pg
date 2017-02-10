@@ -30,11 +30,12 @@ static void parseUnicode(char *s, int l);
 %option bison-bridge
 
 %x xQUOTED
+%x xSQUOTED
 %x xNONQUOTED
 %x xCOMMENT
 
 special		 [\%\$\.\[\]\(\)\|\&\!\=\<\>\@\#\,\*:]
-any			[^\%\$\.\[\]\(\)\|\&\!\=\<\>\@\#\,\* \t\n\r\f\\\"\/:]
+any			[^\%\$\.\[\]\(\)\|\&\!\=\<\>\@\#\,\* \t\n\r\f\\\"\/:']
 blank		[ \t\n\r\f]
 unicode     \\u[0-9A-Fa-f]{4}
 
@@ -85,8 +86,13 @@ unicode     \\u[0-9A-Fa-f]{4}
 									
 <INITIAL>\" 					{
 									addchar(true, '\0');
-									BEGIN xQUOTED;
+                  BEGIN xQUOTED;
 								}
+
+<INITIAL>'	  	{
+                  addchar(true, '\0');
+                  BEGIN xSQUOTED;
+                 }
 
 <INITIAL>\\						{
 									yyless(0);
@@ -140,23 +146,30 @@ unicode     \\u[0-9A-Fa-f]{4}
 
 <xNONQUOTED,xQUOTED>\\t 		{ addchar(false, '\t'); }
 
-<xNONQUOTED,xQUOTED>{unicode}+	{ parseUnicode(yytext, yyleng); }
+<xNONQUOTED,xQUOTED,xSQUOTED>{unicode}+	{ parseUnicode(yytext, yyleng); }
 
-<xNONQUOTED,xQUOTED>\\u 		{ yyerror(NULL, "Unicode sequence is invalid"); }
+<xNONQUOTED,xQUOTED,xSQUOTED>\\u 		{ yyerror(NULL, "Unicode sequence is invalid"); }
 
-<xNONQUOTED,xQUOTED>\\. 		{ yyerror(NULL, "Escape sequence is invalid"); }
+<xNONQUOTED,xQUOTED,xSQUOTED>\\. 		{ yyerror(NULL, "Escape sequence is invalid"); }
 
-<xNONQUOTED,xQUOTED>\\ 			{ yyerror(NULL, "Unexpected end after backslesh"); }
+<xNONQUOTED,xQUOTED,xSQUOTED>\\ 			{ yyerror(NULL, "Unexpected end after backslesh"); }
 
 <xQUOTED><<EOF>>				{ yyerror(NULL, "Unexpected end of quoted string"); }
+<xSQUOTED><<EOF>>				{ yyerror(NULL, "Unexpected end of single quoted string"); }
 
 <xQUOTED>\"						{
 									yylval->str = scanstring;
 									BEGIN INITIAL;
 									return STRING_P;
 								}
+<xSQUOTED>'			{
+									yylval->str = scanstring;
+									BEGIN INITIAL;
+									return STRING_P;
+								}
 
 <xQUOTED>[^\\\"]+   			{ addstring(false, yytext, yyleng); }
+<xSQUOTED>[^']+   			{ addstring(false, yytext, yyleng); }
 
 <INITIAL><<EOF>>				{ yyterminate(); }
 
