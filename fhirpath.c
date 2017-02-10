@@ -25,13 +25,15 @@ typedef void (*reduce_fn)(void *acc, JsonbValue *val);
 static void reduce_jsonb_array(JsonbValue *arr, void *acc, reduce_fn fn);
 static void reduce_jsonb(void *buf, JsonbValue *val);
 static void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn);
-static void reduce_as_string_values(void *acc, JsonbValue *val);
+static void reduce_as_string_values(void *acc,  JsonbValue *val);
 static void reduce_as_string(void *acc, JsonbValue *val);
 static void reduce_as_reference(void *acc, JsonbValue *val);
 static void reduce_as_number(void *acc, JsonbValue *val);
 static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
 static void reduce_as_date(void *acc, JsonbValue *val);
+
+static void reduce_jsonb_as_strings(JsonbValue *jbv, void *acc, reduce_fn fn);
 
 typedef enum MinMax {min, max} MinMax;  
 
@@ -458,6 +460,49 @@ typedef struct StringAccumulator {
 } StringAccumulator;
 
 
+void reduce_jsonb_as_strings(JsonbValue *jbv, void *acc, reduce_fn fn) {
+
+	JsonbIterator *array_it;
+	JsonbValue	array_value;
+	JsonbValue	key;
+	int next_it;
+
+	if(jbv->type == jbvBinary) {
+		array_it = JsonbIteratorInit((JsonbContainer *) jbv->val.binary.data);
+		next_it = JsonbIteratorNext(&array_it, &array_value, true);
+
+		if(next_it == WJB_BEGIN_ARRAY) {
+			while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
+				if(next_it == WJB_ELEM || next_it == WJB_VALUE){
+					reduce_jsonb_as_strings(&array_value, acc, fn);
+				}
+			}
+		} else if( next_it == WJB_BEGIN_OBJECT ){
+			while ((next_it = JsonbIteratorNext(&array_it, &array_value, true)) != WJB_DONE){
+				if(next_it == WJB_KEY){
+					/* NOTE: here we need to copy because iterator change content of pointer */
+					key = array_value;
+				}
+				if(next_it == WJB_VALUE){
+					StringAccumulator *sacc = (StringAccumulator *) acc;
+					if( key.type == jbvString &&
+						(strcmp(sacc->element_type, "HumanName") == 0 || strcmp(sacc->element_type, "Address") == 0) &&
+						( memcmp(key.val.string.val, "use", key.val.string.len) == 0 || memcmp(key.val.string.val, "period", key.val.string.len) == 0 )
+						) {
+						/* elog(INFO, "Skip %s", jsonbv_to_string(NULL, &key)); */
+
+					} else {
+						reduce_jsonb_as_strings(&array_value, acc, fn);
+					}
+				}
+			}
+		}
+	} else if (jbv->type == jbvString ){
+		fn(acc, jbv);
+	}
+}
+
+
 void reduce_as_string_values(void *acc, JsonbValue *val) {
 	StringAccumulator *sacc = (StringAccumulator *) acc;
 	jsonbv_to_string(sacc->buf, val);
@@ -465,7 +510,7 @@ void reduce_as_string_values(void *acc, JsonbValue *val) {
 }
 
 void reduce_as_string(void *acc, JsonbValue *val){
-	reduce_jsonb_values(val, acc, reduce_as_string_values);
+	reduce_jsonb_as_strings(val, acc, reduce_as_string_values);
 }
 
 PG_FUNCTION_INFO_V1(fhirpath_as_string);
