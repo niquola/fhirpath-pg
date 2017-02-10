@@ -30,8 +30,8 @@ function gen_pths() {
 	echo "${paths[@]}"
 }
 
-#SEARCH_TYPES=(number date)
-SEARCH_TYPES=(number date)
+#SEARCH_TYPES=(number date string)
+SEARCH_TYPES=(string)
 for search_type in "${SEARCH_TYPES[@]}"
 do
   eval DATA_TYPES=( \${$search_type[@]} ) ;
