@@ -21,6 +21,7 @@ void initJsonbValue(JsonbValue *jbv, Jsonb *jb);
 void appendJsonbValuePrimitives(StringInfoData *buf, JsonbValue *jbv, char *prefix, char *suffix, char *delim);
 
 static char *jsonbv_to_string(StringInfoData *out, JsonbValue *v);
+static text *jsonbv_to_text(StringInfoData *out, JsonbValue *v);
 typedef void (*reduce_fn)(void *acc, JsonbValue *val);
 static void reduce_jsonb_array(JsonbValue *arr, void *acc, reduce_fn fn);
 static void reduce_jsonb(void *buf, JsonbValue *val);
@@ -194,6 +195,41 @@ char *jsonbv_to_string(StringInfoData *out, JsonbValue *v){
 		elog(ERROR, "Wrong jsonb type: %d", v->type);
 	}
 	return out->data;
+}
+
+text *jsonbv_to_text(StringInfoData *out, JsonbValue *v){
+	if (out == NULL)
+		out = makeStringInfo();
+
+	appendStringInfoSpaces(out, VARHDRSZ);
+
+	switch(v->type)
+	{
+    case jbvNull:
+		return NULL;
+		break;
+    case jbvBool:
+		appendStringInfoString(out, (v->val.boolean ? "true" : "false"));
+		break;
+    case jbvString:
+		appendBinaryStringInfo(out, v->val.string.val, v->val.string.len);
+		/* appendStringInfoString(out, pnstrdup(v->val.string.val, v->val.string.len)); */
+		break;
+    case jbvNumeric:
+		appendStringInfoString(out, DatumGetCString(DirectFunctionCall1(numeric_out, PointerGetDatum(v->val.numeric))));
+		break;
+    case jbvBinary:
+    case jbvArray:
+    case jbvObject:
+	{
+        (void) JsonbToCString(out, v->val.binary.data, -1);
+	}
+	break;
+    default:
+		elog(ERROR, "Wrong jsonb type: %d", v->type);
+	}
+	SET_VARSIZE(out->data, out->len);
+	return (text *)out->data;
 }
 
 void
@@ -648,6 +684,10 @@ void reduce_as_token(void *acc, JsonbValue *val){
 		/* elog(INFO, "ref %s", jsonbv_to_string(NULL, val)); */
 		text *ref = get_text_key(val, "reference");
 		append_token(tacc, ref);
+
+	} else if (val->type == jbvString || val->type == jbvBool || val->type == jbvNumeric) {
+
+		append_token(tacc, jsonbv_to_text(NULL, val));
 
 	} else {
 		elog(ERROR, "Unknown datatype %s", tacc->element_type);

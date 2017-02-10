@@ -111,3 +111,33 @@ SELECT fhirpath_as_token(resource, '.identifier.type', 'CodeableConcept') from a
  {code1,sys1,sys1|code1,code2,sys2,sys2|code2,itcode,itsys,itsys|itcode}
 (1 row)
 
+SELECT fhirpath_as_token('{"a": true}', '.a', 'boolean') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {true}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": false}', '.a', 'boolean') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {false}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": "ups"}', '.a', 'boolean') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {ups}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": 1234}', '.a', 'integer') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {1234}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": 1234.1}', '.a', 'integer') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {1234.1}
+(1 row)
+
