@@ -59,3 +59,6 @@ do
 done
 
 
+  #- psql -c 'create database root' postgres
+  #- cd crash && ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sql && cd ..
+  #- psql -c 'drop database root' postgres
