@@ -70,6 +70,12 @@ SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Quantity', 'mi
      5.15
 (1 row)
 
+SELECT fhirpath_as_number('{"Quantity":{"b": {"value": 5.1}}}', '.Quantity.b', 'Quantity', 'min') + 0.05;
+ ?column? 
+----------
+     5.15
+(1 row)
+
 SELECT fhirpath_as_number('{"a":{"b": {"value": "ups"}}}', '.a.b', 'Quantity', 'min') + 0.05;
  ?column? 
 ----------

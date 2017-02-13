@@ -11,6 +11,7 @@ SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Distance', 'mi
 SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'SimpleQuantity', 'min') + 0.05;
 SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Duration', 'min') + 0.05;
 SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Quantity', 'min') + 0.05;
+SELECT fhirpath_as_number('{"Quantity":{"b": {"value": 5.1}}}', '.Quantity.b', 'Quantity', 'min') + 0.05;
 SELECT fhirpath_as_number('{"a":{"b": {"value": "ups"}}}', '.a.b', 'Quantity', 'min') + 0.05;
 
 SELECT fhirpath_as_number('{"a":{"b": {"value": [5.1, 6.1]}}}', '.a.b.value', 'decimal', 'min') + 0.05;
