@@ -32,6 +32,9 @@ function gen_pths() {
 
 SEARCH_TYPES=(number date string token reference uri  quantity)
 
+
+echo "drop extension fhirpath;"
+echo "create extension fhirpath;"
 for search_type in "${SEARCH_TYPES[@]}"
 do
   eval DATA_TYPES=( \${$search_type[@]} ) ;
