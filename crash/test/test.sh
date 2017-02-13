@@ -30,8 +30,8 @@ function gen_pths() {
 	echo "${paths[@]}"
 }
 
-SEARCH_TYPES=(number date string)
-#SEARCH_TYPES=(string)
+SEARCH_TYPES=(number date string token reference uri  quantity)
+SEARCH_TYPES=(reference)
 for search_type in "${SEARCH_TYPES[@]}"
 do
   eval DATA_TYPES=( \${$search_type[@]} ) ;

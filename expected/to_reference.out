@@ -16,3 +16,27 @@ SELECT fhirpath_as_reference('{"a":{"b": {"reference": "Patient/nicola"}}}', '.a
  {Patient/nicola,nicola}
 (1 row)
 
+SELECT fhirpath_as_reference('{"a":{"b": "Patient/1"}}', '.a.b', 'uri');
+  fhirpath_as_reference  
+-------------------------
+ {Patient/1,1}
+(1 row)
+
+SELECT fhirpath_as_reference('{"a":{"b": "http://dom.io/ups/Patient/1"}}', '.a.b', 'uri');
+  fhirpath_as_reference  
+-------------------------
+ {http://dom.io/ups/Patient/1}
+(1 row)
+
+SELECT fhirpath_as_reference('{"a":{"b": "Patient/nicola"}}', '.a.b', 'uri');
+  fhirpath_as_reference  
+-------------------------
+ {Patient/nicola,nicola}
+(1 row)
+
+SELECT fhirpath_as_reference('{"a":{"b": ["Patient/1", "Patient/2"]}}', '.a.b', 'uri');
+  fhirpath_as_reference  
+-------------------------
+ {Patient/1,1,Patient/2,2}
+(1 row)
+
