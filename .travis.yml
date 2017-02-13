@@ -32,7 +32,7 @@ dist: trusty
 
 script:
   - make USE_PGXS=1 && sudo make install USE_PGXS=1 && make installcheck USE_PGXS=1
-  - cd crash && ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sq
+  - cd crash && ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sq && cd ..
 
 after_script:
   - cat regression.diffs || true
