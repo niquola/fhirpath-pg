@@ -739,31 +739,46 @@ fhirpath_as_token(PG_FUNCTION_ARGS) {
 		PG_RETURN_NULL();
 }
 
-void reduce_as_reference(void *acc, JsonbValue *val){
-	ArrayAccumulator *tacc = (ArrayAccumulator *) acc;
+static inline
+void append_ref(ArrayAccumulator *tacc, JsonbValue *val) {
 
-	/* elog(INFO, "reduce ref [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
-	JsonbValue *ref = jsonb_get_key("reference", val);
+	if (val != NULL && val->type == jbvString) {
 
-	if( ref != NULL && ref->type == jbvString) {
 		int last_entr = 0;
 		int num_entr = 0;
 		int i =0;
 
-		for(i = 0; i < ref->val.string.len; i++) {
-			char ch = ref->val.string.val[i];
+		for(i = 0; i < val->val.string.len; i++) {
+			char ch = val->val.string.val[i];
 			if(ch == '/'){
 				num_entr += 1;
 				last_entr = i;
 			}
 		}
 
-		append_token(tacc, cstring_to_text_with_len(ref->val.string.val, ref->val.string.len));
+		append_token(tacc, cstring_to_text_with_len(val->val.string.val, val->val.string.len));
+
 		if(num_entr == 1) {
-			char *resource_id = ref->val.string.val + last_entr + 1;
-			append_token(tacc, cstring_to_text_with_len(resource_id, ref->val.string.len - last_entr - 1));
+			char *resource_id = val->val.string.val + last_entr + 1;
+			append_token(tacc, cstring_to_text_with_len(resource_id, val->val.string.len - last_entr - 1));
 		}
+
 	}
+}
+
+void reduce_as_reference(void *acc, JsonbValue *val){
+	ArrayAccumulator *tacc = (ArrayAccumulator *) acc;
+
+	/* elog(INFO, "reduce ref [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
+	if( strcmp(tacc->element_type, "Reference") == 0){
+
+		append_ref(tacc, jsonb_get_key("reference", val));
+
+	} else if (val != NULL && val->type == jbvString) {
+
+		append_ref(tacc, val);
+	}
+
 }
 
 PG_FUNCTION_INFO_V1(fhirpath_as_reference);
