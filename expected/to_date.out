@@ -437,3 +437,9 @@ SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
  Tue Aug 09 13:00:00 2005 UTC
 (1 row)
 
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Aug 09 00:00:00 2005 UTC
+(1 row)
+
