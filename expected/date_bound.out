@@ -29,33 +29,33 @@ SELECT fhirpath_date_bound('1980-02-05T08:30', 'min');
 (1 row)
 
 SELECT fhirpath_date_bound('1980', 'max'); 
-     fhirpath_date_bound      
-------------------------------
- Thu Jan 01 00:00:00 1981 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Wed Dec 31 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_date_bound('1980-02', 'max'); 
-     fhirpath_date_bound      
-------------------------------
- Sat Mar 01 00:00:00 1980 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Fri Feb 29 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_date_bound('1980-02-05','max'); 
-     fhirpath_date_bound      
-------------------------------
- Wed Feb 06 00:00:00 1980 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Feb 05 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_date_bound('1980-02-05T08', 'max'); 
-     fhirpath_date_bound      
-------------------------------
- Tue Feb 05 08:59:59 1980 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Feb 05 08:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_date_bound('1980-02-05T08:30', 'max'); 
-     fhirpath_date_bound      
-------------------------------
- Tue Feb 05 08:30:59 1980 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Feb 05 08:30:59.999999 1980 PST
 (1 row)
 
 select fhirpath_date_bound('2000-01-01', 'min');
@@ -65,8 +65,8 @@ select fhirpath_date_bound('2000-01-01', 'min');
 (1 row)
 
 select fhirpath_date_bound('2000-01-01', 'max');
-     fhirpath_date_bound      
-------------------------------
- Sun Jan 02 00:00:00 2000 PST
+         fhirpath_date_bound         
+-------------------------------------
+ Sat Jan 01 23:59:59.999999 2000 PST
 (1 row)
 

@@ -949,29 +949,46 @@ date_bound(char *date_str, long str_len,  MinMax minmax){
 						(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
 						 errmsg("timestamp out of range")));
 
-			/* elog(INFO, "get tm %d y %d m %d d", tm->tm_year, tm->tm_mon, tm->tm_mday); */
+			/* elog(INFO, "get tm %d y %d m %d d %d fsec", tm->tm_year, tm->tm_mon, tm->tm_mday, fsec); */
 
 			if (str_len < 5) {
-				tm->tm_year += 1;
-			} else if (str_len < 8) {
-				if(tm->tm_mon == MONTHS_PER_YEAR) {
-					tm->tm_year += 1;
-					tm->tm_mon = 1;
-				} else {
-					tm->tm_mon += 1;
-				}
-			} else if (str_len < 11) {
-				int			julian;
-				julian = date2j(tm->tm_year, tm->tm_mon, tm->tm_mday) + 1;
-				j2date(julian, &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
-			} else if (str_len < 14) {
+				tm->tm_mon = 12;
+			}
+			if (str_len < 8) {
+				tm->tm_mday = day_tab[isleap(tm->tm_year)][tm->tm_mon - 1];
+			}
+			if (str_len < 11) {
+				tm->tm_hour = 23;
+			}
+			if (str_len < 14) {
 				tm->tm_min = 59;
 				tm->tm_sec = 59;
-			} else if (str_len < 17) {
+			}
+			if (str_len < 17) {
 				tm->tm_sec = 59;
 			}
 
-			if (tm2timestamp(tm, fsec, &tz, &max_date) != 0)
+			/* round fsec up .555 to .555999 */
+			/* this is not strict algorytm so if user enter .500 we will lose 00 */
+			/* better to analyze initial string */
+			int fsec_up = 0, temp, count = 1;
+			if(fsec == 0){
+				fsec_up = 999999;
+			} else {
+				temp = fsec;
+				while(temp > 0) {
+					if(temp%10 == 0) {
+						temp = temp/10;
+						fsec_up += 9 * count; 
+						count= count * 10;
+					} else {
+						break;
+					}
+				}
+			}
+
+
+			if (tm2timestamp(tm, (fsec + fsec_up), &tz, &max_date) != 0)
 				ereport(ERROR,
 						(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
 						 errmsg("timestamp out of range")));

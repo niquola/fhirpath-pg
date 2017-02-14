@@ -35,45 +35,45 @@ SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Thu Jan 01 00:00:00 1981 PST
+          fhirpath_as_date           
+-------------------------------------
+ Wed Dec 31 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Sat Mar 01 00:00:00 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Fri Feb 29 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Feb 06 00:00:00 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Feb 05 23:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Tue Feb 05 08:59:59 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Feb 05 08:59:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Tue Feb 05 08:30:59 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Feb 05 08:30:59.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30+05"}}}', '.a.b.c', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Mon Feb 04 19:30:00 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Mon Feb 04 19:30:00.999999 1980 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'max');
-       fhirpath_as_date       
-------------------------------
- Tue Feb 05 08:30:59 1980 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Feb 05 08:30:59.999999 1980 PST
 (1 row)
 
 --- time
@@ -99,9 +99,9 @@ SELECT fhirpath_as_date('{"time": ["00:00:01", "11:00:00", "23:59:59"] }', '.tim
 ERROR:  date/time field value out of range: "00:00:0101T00:00:00"
 --- Period
 SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Jan 01 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"period": {"start": "1991-01-01", "end": "1991-12-31"}}', '.period', 'Period' , 'min');
@@ -123,9 +123,9 @@ SELECT fhirpath_as_date('{"period": {"start": "1991-01-01"}}', '.period', 'Perio
 (1 row)
 
 SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Jan 02 00:00:00 1991 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Jan 01 23:59:59.999999 1991 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"period": {"end": "1991-01-01"}}', '.period', 'Period' , 'min');
@@ -167,9 +167,9 @@ select '''{
 																											 {"start": "1981-01-01"}]} ] } ] }
 }''' resource \gset
 SELECT fhirpath_as_date(:resource, '.Period.value', 'Period' , 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Jan 01 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
@@ -179,9 +179,9 @@ SELECT fhirpath_as_date(:resource, '.Period.array', 'Period' , 'max');
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Period.where.where(code=value).value', 'Period' , 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Jan 01 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Period' , 'max');
@@ -191,9 +191,9 @@ SELECT fhirpath_as_date(:resource, '.Period.where.where(code=array).array', 'Per
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=value).value', 'Period' , 'max');
-       fhirpath_as_date       
-------------------------------
- Wed Jan 01 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(code=array).array', 'Period' , 'max');
@@ -204,15 +204,15 @@ SELECT fhirpath_as_date(:resource, '.Period.where.where(code=where).where.where(
 
 --- Timing
 SELECT fhirpath_as_date('{"timing": {"event": ["1992-12-31"]}}', '.timing', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Fri Jan 01 00:00:00 1993 PST
+          fhirpath_as_date           
+-------------------------------------
+ Thu Dec 31 23:59:59.999999 1992 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": {"event": ["1992-10-10"]}}', '.timing', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sun Oct 11 00:00:00 1992 PDT
+          fhirpath_as_date           
+-------------------------------------
+ Sat Oct 10 23:59:59.999999 1992 PDT
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-01"]}}', '.timing', 'Timing' , 'min');
@@ -228,9 +228,9 @@ SELECT fhirpath_as_date('{"timing": {"event": ["1991-01-04"]}}', '.timing', 'Tim
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": {"event": ["1993-01-01", "1992-12-31"]}}', '.timing', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sat Jan 02 00:00:00 1993 PST
+          fhirpath_as_date           
+-------------------------------------
+ Fri Jan 01 23:59:59.999999 1993 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": {"event": ["1993-01-01", "1992-12-31"]}}', '.timing', 'Timing' , 'min');
@@ -240,9 +240,9 @@ SELECT fhirpath_as_date('{"timing": {"event": ["1993-01-01", "1992-12-31"]}}', '
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": [{"event": ["1992-12-31"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sun Jan 01 00:00:00 1995 PST
+          fhirpath_as_date           
+-------------------------------------
+ Sat Dec 31 23:59:59.999999 1994 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": [{"event": ["1992-01-01"]}, {"event": ["1993-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
@@ -252,9 +252,9 @@ SELECT fhirpath_as_date('{"timing": [{"event": ["1992-01-01"]}, {"event": ["1993
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": [{"event": ["1991-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Mon Jan 01 00:00:00 1996 PST
+          fhirpath_as_date           
+-------------------------------------
+ Sun Dec 31 23:59:59.999999 1995 PST
 (1 row)
 
 SELECT fhirpath_as_date('{"timing": [{"event": ["1987-01-01", "1992-12-31"]}, {"event": ["1990-01-01", "1995-12-31"]}, {"event": ["1994-12-31"]}]}', '.timing', 'Timing' , 'min');
@@ -280,39 +280,39 @@ select '''{
 																											 {"event": ["1992-01-01"]}]} ] } ] }
 }''' resource \gset
 SELECT fhirpath_as_date(:resource, '.Timing.value', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Thu Jan 02 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Wed Jan 01 23:59:59.999999 1992 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Timing.array', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sun Jan 02 00:00:00 2000 PST
+          fhirpath_as_date           
+-------------------------------------
+ Sat Jan 01 23:59:59.999999 2000 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=value).value', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Thu Jan 02 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Wed Jan 01 23:59:59.999999 1992 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=array).array', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sun Jan 02 00:00:00 2000 PST
+          fhirpath_as_date           
+-------------------------------------
+ Sat Jan 01 23:59:59.999999 2000 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=value).value', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Thu Jan 02 00:00:00 1992 PST
+          fhirpath_as_date           
+-------------------------------------
+ Wed Jan 01 23:59:59.999999 1992 PST
 (1 row)
 
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=array).array', 'Timing' , 'max');
-       fhirpath_as_date       
-------------------------------
- Sun Jan 02 00:00:00 2000 PST
+          fhirpath_as_date           
+-------------------------------------
+ Sat Jan 01 23:59:59.999999 2000 PST
 (1 row)
 
 SET TIME ZONE '+03';
@@ -323,9 +323,9 @@ SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'min');
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'max');
-     fhirpath_date_bound      
-------------------------------
- Tue Aug 09 16:30:42 2005 +03
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Aug 09 16:30:42.999999 2005 +03
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
@@ -335,9 +335,9 @@ SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'max');
-     fhirpath_date_bound      
-------------------------------
- Tue Aug 09 13:30:42 2005 +03
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Aug 09 13:30:42.999999 2005 +03
 (1 row)
 
 SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00+03"}', '.a', 'date', 'min');
@@ -360,9 +360,9 @@ SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'min');
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'max');
-     fhirpath_date_bound      
-------------------------------
- Tue Aug 09 13:30:42 2005 UTC
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Aug 09 13:30:42.999999 2005 UTC
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
@@ -372,9 +372,9 @@ SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
 (1 row)
 
 SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'max');
-     fhirpath_date_bound      
-------------------------------
- Tue Aug 09 10:30:42 2005 UTC
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Aug 09 10:30:42.999999 2005 UTC
 (1 row)
 
 SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00+03"}', '.a', 'date', 'min');
@@ -441,5 +441,145 @@ SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Aug 09 00:00:00 2005 UTC
+(1 row)
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Tue Aug 09 00:00:00.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+     fhirpath_date_bound      
+------------------------------
+ Tue Aug 09 00:00:00 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-08-09T11:00:00+11', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Tue Aug 09 00:00:00.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'max') <= fhirpath_date_bound('2005-08-09T11:00:00+11', 'max');
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min') >= fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT fhirpath_as_date('{"a": {"start": "2005-08-09T11:00:00+11"}}', '.a', 'Period', 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Aug 09 00:00:00 2005 UTC
+(1 row)
+
+SELECT fhirpath_as_date('{"a": {"start": "2005-08-09T11:00:00+11"}}', '.a', 'Period', 'min') >= fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT fhirpath_as_date('{"a": {"end": "2005-08-09T12:00:00+11"}}', '.a', 'Period', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Tue Aug 09 01:00:00.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_as_date('{"a": {"end": "2005-08-09T12:00:00+11"}}', '.a', 'Period', 'max') <= fhirpath_date_bound('2005-08-09T12:00:00+11', 'min');
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT fhirpath_date_bound('2005-08-09T09:00:00+11', 'min');
+     fhirpath_date_bound      
+------------------------------
+ Mon Aug 08 22:00:00 2005 UTC
+(1 row)
+
+-- should not be 2006
+SELECT fhirpath_date_bound('2005', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Sat Dec 31 23:59:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 31 23:59:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-02', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Mon Feb 28 23:59:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 23:59:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:59:59.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.999999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.5', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.599999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.55', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.559999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.555', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.555999 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.5555', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.555599 2005 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.55555', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Thu Mar 03 10:00:00.555559 2005 UTC
+(1 row)
+
+-- should not interesect
+SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
+ ?column? 
+----------
+ t
 (1 row)
 

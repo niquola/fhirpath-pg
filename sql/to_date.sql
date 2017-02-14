@@ -139,4 +139,37 @@ SELECT fhirpath_as_date('{"a": "2005-08-09T13:00"}', '.a', 'date', 'min');
 SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00"}', '.a', 'date', 'min');
 SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:0"}', '.a', 'date', 'min');
 SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+
 SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'max');
+
+SELECT fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+SELECT fhirpath_date_bound('2005-08-09T11:00:00+11', 'max');
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'max') <= fhirpath_date_bound('2005-08-09T11:00:00+11', 'max');
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min') >= fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+
+SELECT fhirpath_as_date('{"a": {"start": "2005-08-09T11:00:00+11"}}', '.a', 'Period', 'min');
+SELECT fhirpath_as_date('{"a": {"start": "2005-08-09T11:00:00+11"}}', '.a', 'Period', 'min') >= fhirpath_date_bound('2005-08-09T11:00:00+11', 'min');
+
+SELECT fhirpath_as_date('{"a": {"end": "2005-08-09T12:00:00+11"}}', '.a', 'Period', 'max');
+SELECT fhirpath_as_date('{"a": {"end": "2005-08-09T12:00:00+11"}}', '.a', 'Period', 'max') <= fhirpath_date_bound('2005-08-09T12:00:00+11', 'min');
+
+SELECT fhirpath_date_bound('2005-08-09T09:00:00+11', 'min');
+
+-- should not be 2006
+SELECT fhirpath_date_bound('2005', 'max');
+SELECT fhirpath_date_bound('2005-03', 'max');
+SELECT fhirpath_date_bound('2005-02', 'max');
+SELECT fhirpath_date_bound('2005-03-03', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.5', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.55', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.555', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.5555', 'max');
+SELECT fhirpath_date_bound('2005-03-03T10:00:00.55555', 'max');
+
+-- should not interesect
+SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
