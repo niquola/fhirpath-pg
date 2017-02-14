@@ -32,6 +32,9 @@ function gen_pths() {
 
 SEARCH_TYPES=(number date string token reference uri  quantity)
 
+
+echo "drop extension fhirpath;"
+echo "create extension fhirpath;"
 for search_type in "${SEARCH_TYPES[@]}"
 do
   eval DATA_TYPES=( \${$search_type[@]} ) ;
@@ -56,3 +59,6 @@ do
 done
 
 
+  #- psql -c 'create database root' postgres
+  #- cd crash && ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sql && cd ..
+  #- psql -c 'drop database root' postgres
