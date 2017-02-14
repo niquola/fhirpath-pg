@@ -915,21 +915,27 @@ Datum
 date_bound(char *date_str, long str_len,  MinMax minmax){
 	if(date_str != NULL) {
 		char *ref_str = "0000-01-01T00:00:00";
-		long ref_str_len = 24;
+		long ref_str_len = strlen(ref_str);
 
-		StringInfoData buf;
-		initStringInfo(&buf);
-		appendBinaryStringInfo(&buf, date_str, str_len);
+		long date_in_len = (str_len > ref_str_len) ? str_len : ref_str_len;
+	    char *date_in = palloc(date_in_len + 1);
+		memcpy(date_in, date_str, str_len);
+
+		/* elog(INFO, "date_str: '%s', %d", date_str, str_len ); */
 
 		if( str_len < ref_str_len){
-			char *ref_tail = ref_str + str_len;
-			appendBinaryStringInfo(&buf, ref_tail, ref_str_len - str_len);
+			long diff = (ref_str_len - str_len);
+			memcpy(date_in + str_len, ref_str + str_len, diff);
 		}
 
+		date_in[date_in_len] = '\0';
+
+		/* elog(INFO, "input: '%s', %d, %d", date_in, date_in_len, ref_str_len); */
+
 		Datum min_date = DirectFunctionCall3(timestamptz_in,
-										 CStringGetDatum(buf.data),
-										 ObjectIdGetDatum(InvalidOid),
-										 Int32GetDatum(-1));
+											 CStringGetDatum(date_in),
+											 ObjectIdGetDatum(InvalidOid),
+											 Int32GetDatum(-1));
 		if(minmax == min) {
 			return min_date;
 		} else if (minmax == max ) {
@@ -980,7 +986,7 @@ date_bound(char *date_str, long str_len,  MinMax minmax){
 
 void reduce_as_date(void *acc, JsonbValue *val){
 	DateAccumulator *dacc = acc;
-	/* elog(INFO, "extract as date %s", jsonbv_to_string(NULL, val)); */
+	/* elog(INFO, "extract as date %s %d", jsonbv_to_string(NULL, val), val->val.string.len); */
 
 	if(val != NULL && val->type == jbvString) {
 

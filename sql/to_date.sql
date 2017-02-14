@@ -108,3 +108,35 @@ SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=value).value', 'Tim
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=array).array', 'Timing' , 'max');
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=value).value', 'Timing' , 'max');
 SELECT fhirpath_as_date(:resource, '.Timing.where.where(code=where).where.where(code=array).array', 'Timing' , 'max');
+
+SET TIME ZONE '+03';
+
+
+SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'min');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'max');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'max');
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00+03"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+
+SET TIME ZONE 'utc';
+
+
+SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'min');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42Z',  'max');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'min');
+SELECT fhirpath_date_bound('2005-08-09T13:30:42+03', 'max');
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00+03"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+
+SELECT fhirpath_as_date('{"a": "2005-08-09T13"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:0"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:0"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T13:00:00Z"}', '.a', 'date', 'min');
+SELECT fhirpath_as_date('{"a": "2005-08-09T11:00:00+11"}', '.a', 'date', 'min');
