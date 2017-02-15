@@ -607,3 +607,16 @@ SELECT fhirpath_as_date('{"propPeriod": {"end": "2005-08-09T12:00:00+11"}}', '.p
  Tue Aug 09 01:00:00.999999 2005 UTC
 (1 row)
 
+-- poly
+select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
+ fhirpath_as_date 
+------------------
+ 
+(1 row)
+
+select fhirpath_as_date('{"performedDateTime": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
+       fhirpath_as_date       
+------------------------------
+ Tue Feb 05 08:30:00 1980 UTC
+(1 row)
+

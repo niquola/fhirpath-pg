@@ -6,6 +6,8 @@
 ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sq
 ```
 
+P
+
 
 ## Search Parameter Types
 
@@ -50,7 +52,10 @@
 | _Money_          | Y        |          |          |          |           | Y        |          |
 | SampledData      |          |          |          |          |           |          |          |
 | ContactPoint     |          |          |          | Y        |           |          |          |
-| Reference        |          |          |          |          | Y         |          |          ||
+| __Other__        | -------- | -------- | -------- | -------- | --------  | -------- | -------- |
+| Reference        |          |          |          |          | Y         |          |          |
+| Narrative        |          |          |          |          |           |          |          |
+| Extension        |          |          |          |          |           |          |          ||
 
 
 
