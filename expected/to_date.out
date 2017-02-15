@@ -73,8 +73,7 @@ SELECT fhirpath_as_date('{"a":{"b": {"c": "1980-02-05T08:30+05"}}}', '.a.b.c', '
 SELECT fhirpath_as_date('{"a":["1980-02-05T08:30", "1976-01", "1952-02-03"]}', '.a', 'date', 'max');
           fhirpath_as_date           
 -------------------------------------
- Tue Feb 05 08:30:59.999999 1980 PST
-(1 row)
+ Tue Feb 05 08:30:59.999999 1980 PST (1 row)
 
 --- time
 SELECT fhirpath_as_date('{"time": "11:00:00" }', '.time', 'time' , 'max');
@@ -583,12 +582,12 @@ SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
  t
 (1 row)
 
-select fhirpath_as_date('{"performed": {"start": "1991-01-01", "end": "1991-12-31"}}', 'polymorphic', 'max');
+select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
           fhirpath_as_date           
 -------------------------------------
  Tue Dec 31 23:59:59.999999 1991 PST
 
-select fhirpath_as_date('{"performed": "1980-02-05T08:30"}', 'Polymorphic', 'max');
+select fhirpath_as_date('{"performedDateTime": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:00 1980 PST

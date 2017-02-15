@@ -174,6 +174,6 @@ SELECT fhirpath_date_bound('2005-03-03T10:00:00.55555', 'max');
 SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
 
 -- poly
-select fhirpath_as_date('{"performed": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
-select fhirpath_as_date('{"performed": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
+select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
+select fhirpath_as_date('{"performedDateTime": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
 
