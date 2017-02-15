@@ -40,13 +40,41 @@ typedef enum MinMax {min, max} MinMax;
 
 static MinMax minmax_from_string(char *s);
 
+typedef enum FPSearchType {FPToken, FPString, FPDate, FPNumeric, FPReference} FPSearchType;  
+
 static Datum date_bound(char *date_str, long str_len,  MinMax minmax);
+
+typedef struct BasicAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+} BasicAccumulator;
 
 typedef struct NumericAccumulator {
 	char	*element_type;
+	FPSearchType search_type;
 	Numeric acc;
 	MinMax minmax;
 } NumericAccumulator;
+
+typedef struct StringAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+	StringInfoData *buf;
+} StringAccumulator;
+
+typedef struct ArrayAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+	ArrayBuildState *acc;
+	bool case_insensitive;
+} ArrayAccumulator;
+
+typedef struct DateAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+	Datum  acc;
+	MinMax minmax;
+} DateAccumulator;
 
 static void update_numeric(NumericAccumulator *nacc, Numeric num);
 /* static char * numeric_to_cstring(Numeric n); */
@@ -135,6 +163,63 @@ jsonb_get_key(char *key, JsonbValue *obj){
 	} else {
 		return NULL;
 	}
+}
+
+static inline char *
+starts_with(char const *str, char const *pref, int limit) {
+	int next = limit;
+	char *postfix;
+	for ( ; next > 0; str++, pref++, --next) {
+     	if (*pref == '\0'){
+			postfix = palloc(next + 1);
+			memcpy(postfix, str, next);
+			postfix[next] = '\0';
+			return postfix;
+		}
+		else if (*str != *pref)
+			return NULL;
+	}
+    return NULL;
+}
+
+inline static JsonbValue *
+jsonb_get_prefix(char *key, JsonbValue *obj, char **type){
+
+	JsonbIterator *iter;
+	/* check for memory */
+	/* we return this item from function */
+	JsonbValue	*item;
+	int next_it;
+	char *postfix;
+
+	bool matched = false;
+
+	if (obj != NULL && obj->type == jbvBinary){
+
+		item = palloc(sizeof(JsonbValue));
+		iter = JsonbIteratorInit((JsonbContainer *) obj->val.binary.data);
+		next_it = JsonbIteratorNext(&iter, item, true);
+
+		if(next_it == WJB_BEGIN_OBJECT){
+			while ((next_it = JsonbIteratorNext(&iter, item, true)) != WJB_DONE){
+				if(next_it == WJB_KEY && item->type == jbvString){
+					postfix = starts_with(item->val.string.val, key, item->val.string.len);
+					if(postfix != NULL){
+						/* write type as postfix */
+						*type = postfix;
+						matched = true;
+						/* elog(INFO, "match prefix[key]: %s", jsonbv_to_string(NULL, item)); */
+					}
+				}
+				if(next_it == WJB_VALUE && matched){
+					/* elog(INFO, "prefix[value]: %s", jsonbv_to_string(NULL, item)); */
+					return item; 
+				}
+			}
+		}
+		pfree(item);
+	}
+	return NULL;
 }
 
 inline text *
@@ -331,6 +416,19 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		key = fpGetString(path_item, NULL);
 		next_v = jsonb_get_key(key, jbv);
 
+		/* handle polymorphics */
+		if(next_v == NULL && path_item->nextPos == 0){
+			BasicAccumulator *bacc = (BasicAccumulator *)acc;
+			if(strcmp(bacc->element_type, "Polymorphic") == 0) {
+				char *poly_type;
+				next_v = jsonb_get_prefix(key, jbv, &poly_type);
+				if(next_v != NULL){
+					/* elog(INFO, "!!!el type %s, type %s, %s", bacc->element_type, poly_type, jsonbv_to_string(NULL, next_v)); */
+					bacc->element_type = poly_type;
+				}
+			}
+		}
+
 
 		if (next_v != NULL) {
 			/* elog(INFO, "type %d", next_v->type); */
@@ -494,11 +592,6 @@ void reduce_jsonb_values(JsonbValue *jbv, void *acc, reduce_fn fn) {
 	}
 }
 
-typedef struct StringAccumulator {
-	char	*element_type;
-	StringInfoData *buf;
-} StringAccumulator;
-
 
 void reduce_jsonb_as_strings(JsonbValue *jbv, void *acc, reduce_fn fn) {
 
@@ -577,6 +670,7 @@ fhirpath_as_string(PG_FUNCTION_ARGS) {
 
 	StringAccumulator acc;
 	acc.element_type = type;
+	acc.search_type = FPString;
 	acc.buf = &buf;
 
 	long num_results = reduce_fhirpath(&jbv, &fp, &acc, reduce_as_string);
@@ -589,11 +683,6 @@ fhirpath_as_string(PG_FUNCTION_ARGS) {
 	}
 }
 
-typedef struct ArrayAccumulator {
-	char	*element_type;
-	ArrayBuildState *acc;
-	bool case_insensitive;
-} ArrayAccumulator;
 
 
 
@@ -728,6 +817,7 @@ fhirpath_as_token(PG_FUNCTION_ARGS) {
 
 	ArrayAccumulator acc;
 	acc.element_type = type;
+	acc.search_type = FPToken;
 	acc.acc = NULL;
 	acc.case_insensitive = true;
 
@@ -800,6 +890,7 @@ fhirpath_as_reference(PG_FUNCTION_ARGS) {
 
 	ArrayAccumulator acc;
 	acc.element_type = type;
+	acc.search_type = FPReference;
 	acc.acc = NULL;
 	acc.case_insensitive = false;
 
@@ -893,6 +984,7 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 
 	NumericAccumulator acc;
 	acc.element_type = type;
+	acc.search_type = FPNumeric;
 	acc.minmax = minmax;
 	acc.acc = NULL;
 
@@ -905,11 +997,6 @@ fhirpath_as_number(PG_FUNCTION_ARGS) {
 }
 
 
-typedef struct DateAccumulator {
-	char	*element_type;
-	Datum  acc;
-	MinMax minmax;
-} DateAccumulator;
 
 Datum
 date_bound(char *date_str, long str_len,  MinMax minmax){
@@ -1003,7 +1090,7 @@ date_bound(char *date_str, long str_len,  MinMax minmax){
 
 void reduce_as_date(void *acc, JsonbValue *val){
 	DateAccumulator *dacc = acc;
-	/* elog(INFO, "extract as date %s %d", jsonbv_to_string(NULL, val), val->val.string.len); */
+	/* elog(INFO, "extract as date %s as %s", jsonbv_to_string(NULL, val), dacc->element_type);   */
 
 	if(val != NULL && val->type == jbvString) {
 
@@ -1110,6 +1197,7 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 
 	DateAccumulator acc;
 	acc.element_type = type;
+	acc.search_type = FPDate;
 	acc.acc = 0;
 	acc.minmax = minmax;
 

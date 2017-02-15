@@ -583,3 +583,27 @@ SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
  t
 (1 row)
 
+SELECT fhirpath_date_bound('1979', 'max');
+         fhirpath_date_bound         
+-------------------------------------
+ Mon Dec 31 23:59:59.999999 1979 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('1980', 'min');
+     fhirpath_date_bound      
+------------------------------
+ Tue Jan 01 00:00:00 1980 UTC
+(1 row)
+
+SELECT fhirpath_date_bound('1979', 'max') < fhirpath_date_bound('1980', 'min');
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT fhirpath_as_date('{"propPeriod": {"end": "2005-08-09T12:00:00+11"}}', '.prop', 'Polymorphic', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Tue Aug 09 01:00:00.999999 2005 UTC
+(1 row)
+

@@ -171,5 +171,13 @@ SELECT fhirpath_date_bound('2005-03-03T10:00:00.555', 'max');
 SELECT fhirpath_date_bound('2005-03-03T10:00:00.5555', 'max');
 SELECT fhirpath_date_bound('2005-03-03T10:00:00.55555', 'max');
 
+
 -- should not interesect
 SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
+
+SELECT fhirpath_date_bound('1979', 'max');
+SELECT fhirpath_date_bound('1980', 'min');
+SELECT fhirpath_date_bound('1979', 'max') < fhirpath_date_bound('1980', 'min');
+
+
+SELECT fhirpath_as_date('{"propPeriod": {"end": "2005-08-09T12:00:00+11"}}', '.prop', 'Polymorphic', 'max');

@@ -77,3 +77,10 @@ SELECT fhirpath_as_token(resource, $FP$.telecom.where(use="work")$FP$, 'ContactP
 -- test lowering
 SELECT fhirpath_as_token('{"a": "AAAA"}', '.a', 'string') from as_token_test;
 SELECT fhirpath_as_token('{"coding": {"code": "CC", "system": "SYS"}}', '.coding', 'Coding') from as_token_test;
+
+-- polymorphic
+SELECT fhirpath_as_token('{"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}', '.prop', 'Polymorphic') from as_token_test;
+SELECT fhirpath_as_token('{"b": {"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+SELECT fhirpath_as_token('{"a": {"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "C1", "system": "SYS2"},{"code": "C2", "system": "SYS2"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;

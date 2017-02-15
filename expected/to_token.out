@@ -178,3 +178,34 @@ SELECT fhirpath_as_token('{"coding": {"code": "CC", "system": "SYS"}}', '.coding
  {cc,sys,sys|cc}
 (1 row)
 
+-- polymorphic
+SELECT fhirpath_as_token('{"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}', '.prop', 'Polymorphic') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {cc,sys,sys|cc}
+(1 row)
+
+SELECT fhirpath_as_token('{"b": {"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ 
+(1 row)
+
+SELECT fhirpath_as_token('{"a": {"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {cc,sys,sys|cc}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+ fhirpath_as_token 
+-------------------
+ {cc,sys,sys|cc}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "C1", "system": "SYS2"},{"code": "C2", "system": "SYS2"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+         fhirpath_as_token         
+-----------------------------------
+ {c1,sys2,sys2|c1,c2,sys2,sys2|c2}
+(1 row)
+
