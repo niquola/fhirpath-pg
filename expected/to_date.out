@@ -583,3 +583,13 @@ SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
  t
 (1 row)
 
+select fhirpath_as_date('{"performed": {"start": "1991-01-01", "end": "1991-12-31"}}', 'polymorphic', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 PST
+
+select fhirpath_as_date('{"performed": "1980-02-05T08:30"}', 'Polymorphic', 'max');
+       fhirpath_as_date       
+------------------------------
+ Tue Feb 05 08:30:00 1980 PST
+

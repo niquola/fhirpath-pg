@@ -46,7 +46,6 @@ SELECT fhirpath_as_date('{"period": [{"start": "1991-01-01"},
                                      {"start": "1991-01-01", "end": "1991-12-31"},
                                      {"end":   "1991-12-31"}]}', '.period', 'Period' , 'min');
 
-
 select '''{
   "Period":{
     "value": {"start": "1991-01-01", "end": "1991-12-31"},
@@ -173,3 +172,8 @@ SELECT fhirpath_date_bound('2005-03-03T10:00:00.55555', 'max');
 
 -- should not interesect
 SELECT fhirpath_date_bound('2005', 'max') < fhirpath_date_bound('2006', 'min');
+
+-- poly
+select fhirpath_as_date('{"performed": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
+select fhirpath_as_date('{"performed": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
+
