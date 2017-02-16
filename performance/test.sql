@@ -56,27 +56,27 @@ select count(num) "native date {e,d,c,a,b}" from (
 \c postgres
 \timing
 
+DROP function arr_max(json);
 CREATE OR REPLACE FUNCTION arr_max(json) RETURNS numeric AS
-'select max(i::numeric) from (select json_array_elements_text($1) as i) t' LANGUAGE sql IMMUTABLE;
+	'select max(i::numeric) from (select json_array_elements_text($1) as i) t'
+LANGUAGE sql IMMUTABLE;
 
 --select count(num) "fhirpath number .e.d.c.a.b" from (
 select count(*) from (
-	select fhirpath_as_number(('{"e": {"d":{"c":{"a": {"b": [' || x || ', ' || x+1 || ', ' || x+2 || ']} } } } }')::jsonb, '.e.d.c.a.b','integer', 'max') as num
+	select fhirpath_as_number(('{"e":{"d":{"c":{"a":{"b":['||x||','||x+1||','||x+2||','||x-8||']} } } } }')::jsonb, '.e.d.c.a.b','integer', 'max') as num
 		from generate_series(1, 1000000) x
 ) _ ;
 
 ---select count(num) "native number {e,d,c,a,b}" from (
-select * from (
-	 select  arr_max(((('{"e": {"d":{"c":{"a": {"b":['||x||','||x+1||','||x+2||','||x-8||']}} }} }')::jsonb)#>'{e,d,c,a,b}')::json) as num
+select count(*) from (
+	 select  arr_max(((('{"e": {"d":{"c":{"a": {"b":['||x||','||x+1||','||x+2||','||x-3||']}} }} }')::jsonb)#>'{e,d,c,a,b}')::json) as num
 
 	 -- select json_array_elements(
 			-- (('{"e": {"d":{"c":{"a":{"b":['||x||','||x+1||','||x+2||']}} }} }')::jsonb)#>'{e,d,c,a,b}'
 	 -- ) as num
-	 from generate_series(1, 10) x
+	 from generate_series(1, 1000000) x
 ) _;
 
-
-select 1;
 
 ---}}}
 
@@ -84,6 +84,9 @@ select 1;
 
 \c postgres
 \timing
+
+
+
 select count(num) "fhirpath number .e.d.c.a.b" from (
 	select fhirpath_as_number(('{"e": {"d":{"c":{"a": {"b": ' || x || '} } } } }')::jsonb, '.e.d.c.a.b','integer', 'max') as num
 		from generate_series(1, 100000) x
@@ -93,6 +96,48 @@ select count(num) "native number {e,d,c,a,b}" from (
 	select ((('{"e": {"d":{"c":{"a": {"b": ' || x || '} } } } }')::jsonb)#>>'{e,d,c,a,b}')::numeric as num
 		from generate_series(1, 100000) x
 ) _;
+
+---}}}
+
+---{{{
+\c postgres
+
+\set series 1000000
+
+
+DROP function eval_time(text);
+create or replace function eval_time(fn_name text) returns interval as
+$proc$
+DECLARE
+	result integer;
+  StartTime timestamptz;
+  EndTime timestamptz;
+  Delta interval;
+BEGIN
+	StartTime := clock_timestamp();
+	execute fn_name||'()';
+	EndTime := clock_timestamp();
+	Delta := 1000 *( extract(epoch from EndTime) - extract(epoch from StartTime) );
+	return Delta;
+END;
+$proc$
+LANGUAGE plpgsql;
+
+
+
+
+create or replace function bench_fhirpath_as_number() returns numeric as $$
+BEGIN
+	perform count(num) "fhirpath number .e.d.c.a.b" from (
+		select fhirpath_as_number(('{"e": {"d":{"c":{"a": {"b": ' || x || '} } } } }')::jsonb, '.e.d.c.a.b','integer', 'max') as num
+		from generate_series(1, 100000) x
+	) _ ;
+END;
+$$ LANGUAGE plpgsql;
+
+select bench_fhirpath_as_number();
+select eval_time("bench_fhirpath_as_number");
+
 
 DO $proc$
 DECLARE
@@ -134,4 +179,40 @@ $proc$;
 
 
 
+---}}}
+
+---{{{
+\c postgres
+
+
+DROP function eval_time(text);
+create or replace function eval_time(query text) returns numeric as
+$proc$
+DECLARE
+  StartTime timestamptz;
+  EndTime timestamptz;
+  Delta numeric;
+BEGIN
+	StartTime := clock_timestamp();
+	execute query;
+	EndTime := clock_timestamp();
+	Delta := ROUND (( EXTRACT (EPOCH FROM EndTime) - EXTRACT (EPOCH FROM StartTime)) * 1000);
+	return Delta;
+END;
+$proc$
+LANGUAGE plpgsql;
+
+
+drop function bench_fhirpath_as_number();
+create or replace function bench_fhirpath_as_number() returns void as $$
+BEGIN
+	PERFORM count(num) "fhirpath number .e.d.c.a.b" from (
+		select fhirpath_as_number(('{"e": {"d":{"c":{"a": {"b": ' || x || '} } } } }')::jsonb, '.e.d.c.a.b','integer', 'max') as num
+		from generate_series(1, 100000) x
+	) _ ;
+END;
+$$ LANGUAGE plpgsql;
+
+
+select eval_time('select bench_fhirpath_as_number()');
 ---}}}
