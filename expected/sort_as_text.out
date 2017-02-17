@@ -2,7 +2,7 @@
 SELECT fhirpath_sort_as_text(:pt, '.name', 'HumanName');
      fhirpath_sort_as_text      
 --------------------------------
- ["petrov"]["ivanov", "vodkin"]
+ ["ivanov", "vodkin"]["petrov"]
 (1 row)
 
 SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "family": ["f1", "f2"]}]}', '.name', 'HumanName');
@@ -50,7 +50,7 @@ SELECT fhirpath_sort_as_text('{"a": 222}', '.a', 'Numeric');
 SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "given": ["Tanebaum"], "family": ["Rudolf"]}]}', '.name', 'HumanName');
  fhirpath_sort_as_text  
 ------------------------
- ["Tanebaum"]["Rudolf"]
+ ["Rudolf"]["Tanebaum"]
 (1 row)
 
 SELECT fhirpath_sort_as_text('{"coding": {"code": "C1", "system": "SYS"}}', '.coding', 'Coding');

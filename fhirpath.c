@@ -1252,11 +1252,11 @@ reduce_as_sort_text(void *acc, JsonbValue *jbv) {
 				out = makeStringInfo();
 				appendStringInfoSpaces(out, VARHDRSZ);
 
-				val = jsonb_get_key("given", jbv);
+				val = jsonb_get_key("family", jbv);
 				if(val != NULL)
 					append_jsonbv_to_buffer(out, val);
 
-				val = jsonb_get_key("family", jbv);
+				val = jsonb_get_key("given", jbv);
 				if(val != NULL)
 					append_jsonbv_to_buffer(out, val);
 
