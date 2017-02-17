@@ -10,3 +10,4 @@ SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": {"start":  "SK
 SELECT fhirpath_sort_as_text('{"a": 222}', '.a', 'Numeric');
 SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "given": ["Tanebaum"], "family": ["Rudolf"]}]}', '.name', 'HumanName');
 SELECT fhirpath_sort_as_text('{"coding": {"code": "C1", "system": "SYS"}}', '.coding', 'Coding');
+SELECT fhirpath_sort_as_text('{"ref": {"reference": "pt/1"}}', '.ref', 'Reference');

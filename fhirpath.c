@@ -1263,9 +1263,33 @@ reduce_as_sort_text(void *acc, JsonbValue *jbv) {
 				tacc->acc = buffer_to_text(out);
 			}
 			break;
+
+		case 'R' :
+			if(strcmp(element_type, "Reference") == 0){
+				out = makeStringInfo();
+				appendStringInfoSpaces(out, VARHDRSZ);
+
+				val = jsonb_get_key("reference", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				tacc->acc = buffer_to_text(out);
+			}
+			break;
 		case 'I' :
 			if(strcmp(element_type, "Identifier") == 0){
+				out = makeStringInfo();
+				appendStringInfoSpaces(out, VARHDRSZ);
 
+				val = jsonb_get_key("system", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("value", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				tacc->acc = buffer_to_text(out);
 			}
 			break;
 		case 'C' :
