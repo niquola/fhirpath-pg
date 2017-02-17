@@ -192,7 +192,47 @@ BEGIN
 	from generate_series(1, 100000) x;
 END;
 $$ LANGUAGE plpgsql;
-----------------------------------------------------------------------
+
+-------------------------
+--  AS STRING
+-------------------------
+create or replace function fhirpath_as_string() returns void as $$
+BEGIN
+	PERFORM fhirpath_as_string(('{"b": "some_string_'||x||'"}')::jsonb, '.b', 'string')
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+create or replace function native_as_string() returns void as $$
+BEGIN
+	PERFORM ((('{"b": "some_string_'||x||'"}')::jsonb)#>>'{b}')::text
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-------------------------
+--  AS STRING CONCAT HUMAN NAME
+-------------------------
+DROP function humanname_concat(jsonb);
+CREATE OR REPLACE FUNCTION humanname_concat(jsonb) RETURNS text AS
+	'select string_agg(t.value, '' $$ '') from (select value from jsonb_each_text($1) ) t'
+LANGUAGE sql IMMUTABLE;
+
+create or replace function native_as_string_concat() returns void as $$
+BEGIN
+	PERFORM humanname_concat(((('{"b": {"given": ["vasya_'||x||'", "misha_'||x-1||'"], "family": ["pupkin_'||x||'"]}}')::jsonb)#>'{b}'))
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+create or replace function fhirpath_as_string_concat() returns void as $$
+BEGIN
+	PERFORM fhirpath_as_string(('{"b": {"given": ["vasya_'||x||'", "misha_'||x-1||'"], "family": ["pupkin_'||x||'"]}}')::jsonb, '.b', 'HumanName')
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
 
 select
 	  r.method
@@ -209,7 +249,8 @@ from (
 		select unnest(array['as_number_1', 'as_number_2',
 												'as_date_1', 'as_date_2',
 												'as_number_min', 'as_number_max',
-												'as_date_min', 'as_date_max']) as f
+												'as_date_min', 'as_date_max',
+												'as_string', 'as_string_concat' ]) as f
 	) f
 ) as r
 
@@ -220,7 +261,21 @@ order by "ratio fhirpath/native" desc;
 
 
 ---{{{
-
 \c postgres
-select native_as_date();
+\timing
+
+
 ---}}}
+
+
+
+
+
+
+
+
+
+
+
+
+
