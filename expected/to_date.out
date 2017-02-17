@@ -608,15 +608,24 @@ SELECT fhirpath_as_date('{"propPeriod": {"end": "2005-08-09T12:00:00+11"}}', '.p
 (1 row)
 
 -- poly
-select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
- fhirpath_as_date 
-------------------
- 
+select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'Polymorphic', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Tue Dec 31 23:59:59.999999 1991 UTC
 (1 row)
 
 select fhirpath_as_date('{"performedDateTime": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
        fhirpath_as_date       
 ------------------------------
  Tue Feb 05 08:30:00 1980 UTC
+(1 row)
+
+select fhirpath_as_date('{"arr": [
+{"code":"code_1", "performedPeriod": {"start": "1993-01-01", "end": "1993-12-31"}},
+{"code":"code_2", "performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}
+]}', '.arr.where(code=code_1).performed', 'Polymorphic', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Fri Dec 31 23:59:59.999999 1993 UTC
 (1 row)
 

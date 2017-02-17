@@ -181,6 +181,11 @@ SELECT fhirpath_date_bound('1979', 'max') < fhirpath_date_bound('1980', 'min');
 
 SELECT fhirpath_as_date('{"propPeriod": {"end": "2005-08-09T12:00:00+11"}}', '.prop', 'Polymorphic', 'max');
 -- poly
-select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'polymorphic', 'max');
+select fhirpath_as_date('{"performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}', '.performed', 'Polymorphic', 'max');
 select fhirpath_as_date('{"performedDateTime": "1980-02-05T08:30"}', '.performed', 'Polymorphic', 'min');
+
+select fhirpath_as_date('{"arr": [
+{"code":"code_1", "performedPeriod": {"start": "1993-01-01", "end": "1993-12-31"}},
+{"code":"code_2", "performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}
+]}', '.arr.where(code=code_1).performed', 'Polymorphic', 'max');
 
