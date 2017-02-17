@@ -1,0 +1,61 @@
+\set pt $JSON${"resourceType":"Patient", "name": [{"use": "official", "ext": {"bext" : ["fext"]}, "family": ["ivanov", "vodkin"], "given": ["petrov"]}, {"use": "common", "family": ["petrov"]}]}$JSON$
+SELECT fhirpath_sort_as_text(:pt, '.name', 'HumanName');
+     fhirpath_sort_as_text      
+--------------------------------
+ ["petrov"]["ivanov", "vodkin"]
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "family": ["f1", "f2"]}]}', '.name', 'HumanName');
+ fhirpath_sort_as_text 
+-----------------------
+ ["f1", "f2"]
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "line": ["f1", "f2"]}]}', '.name', 'Address');
+ fhirpath_sort_as_text 
+-----------------------
+ ["f1", "f2"]
+(1 row)
+
+SELECT fhirpath_sort_as_text(:pt, '.name.family', 'string');
+ fhirpath_sort_as_text 
+-----------------------
+ ivanov
+(1 row)
+
+SELECT fhirpath_sort_as_text(:pt, '.name.where(use=official).family', 'HumanName');
+ fhirpath_sort_as_text 
+-----------------------
+ ivanov
+(1 row)
+
+SELECT fhirpath_sort_as_text(:pt, '.name.where(use=common).family', 'HumanName');
+ fhirpath_sort_as_text 
+-----------------------
+ petrov
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": {"start":  "SKIP", "end": "SKIP"}, "line": ["f1", "f2"]}]}', '.name', 'Address');
+ fhirpath_sort_as_text 
+-----------------------
+ ["f1", "f2"]
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"a": 222}', '.a', 'Numeric');
+ fhirpath_sort_as_text 
+-----------------------
+ 222
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"name": [{"use": "SKIP", "period": "SKIP", "given": ["Tanebaum"], "family": ["Rudolf"]}]}', '.name', 'HumanName');
+ fhirpath_sort_as_text  
+------------------------
+ ["Tanebaum"]["Rudolf"]
+(1 row)
+
+SELECT fhirpath_sort_as_text('{"coding": {"code": "C1", "system": "SYS"}}', '.coding', 'Coding');
+ fhirpath_sort_as_text 
+-----------------------
+ SYSC1
+(1 row)
+

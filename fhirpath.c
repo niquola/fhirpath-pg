@@ -40,7 +40,7 @@ typedef enum MinMax {min, max} MinMax;
 
 static MinMax minmax_from_string(char *s);
 
-typedef enum FPSearchType {FPToken, FPString, FPDate, FPNumeric, FPReference} FPSearchType;  
+typedef enum FPSearchType {FPToken, FPString, FPDate, FPNumeric, FPReference, FPTextSort} FPSearchType;  
 
 static Datum date_bound(char *date_str, long str_len,  MinMax minmax);
 
@@ -75,6 +75,12 @@ typedef struct DateAccumulator {
 	Datum  acc;
 	MinMax minmax;
 } DateAccumulator;
+
+typedef struct TextAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+	text *acc;
+} TextAccumulator;
 
 static void update_numeric(NumericAccumulator *nacc, Numeric num);
 /* static char * numeric_to_cstring(Numeric n); */
@@ -148,7 +154,7 @@ fhirpath_out(PG_FUNCTION_ARGS)
 
 
 /* return value of obj key */
-static JsonbValue *
+static inline JsonbValue *
 jsonb_get_key(char *key, JsonbValue *obj){
 
 	JsonbValue	key_v;
@@ -249,9 +255,8 @@ checkScalarEquality(FhirpathItem *fpi,  JsonbValue *jb) {
 }
 
 
-/* this function convert JsonbValue to string, */
-/* StringInfoData out buffer is optional */
-char *jsonbv_to_string(StringInfoData *out, JsonbValue *v){
+static inline StringInfoData *
+append_jsonbv_to_buffer(StringInfoData *out, JsonbValue *v){
 	if (out == NULL)
 		out = makeStringInfo();
 
@@ -280,6 +285,14 @@ char *jsonbv_to_string(StringInfoData *out, JsonbValue *v){
     default:
 		elog(ERROR, "Wrong jsonb type: %d", v->type);
 	}
+	return out;
+
+}
+/* this function convert JsonbValue to string, */
+/* StringInfoData out buffer is optional */
+static inline char *
+jsonbv_to_string(StringInfoData *out, JsonbValue *v){
+	append_jsonbv_to_buffer(out, v);
 	return out->data;
 }
 
@@ -291,32 +304,13 @@ text *jsonbv_to_text(StringInfoData *out, JsonbValue *v){
 		out = makeStringInfo();
 
 	appendStringInfoSpaces(out, VARHDRSZ);
+	append_jsonbv_to_buffer(out, v);
+	SET_VARSIZE(out->data, out->len);
+	return (text *)out->data;
+}
 
-	switch(v->type)
-	{
-    case jbvNull:
-		return NULL;
-		break;
-    case jbvBool:
-		appendStringInfoString(out, (v->val.boolean ? "true" : "false"));
-		break;
-    case jbvString:
-		appendBinaryStringInfo(out, v->val.string.val, v->val.string.len);
-		/* appendStringInfoString(out, pnstrdup(v->val.string.val, v->val.string.len)); */
-		break;
-    case jbvNumeric:
-		appendStringInfoString(out, DatumGetCString(DirectFunctionCall1(numeric_out, PointerGetDatum(v->val.numeric))));
-		break;
-    case jbvBinary:
-    case jbvArray:
-    case jbvObject:
-	{
-        (void) JsonbToCString(out, v->val.binary.data, -1);
-	}
-	break;
-    default:
-		elog(ERROR, "Wrong jsonb type: %d", v->type);
-	}
+static inline text *
+buffer_to_text(StringInfoData *out) {
 	SET_VARSIZE(out->data, out->len);
 	return (text *)out->data;
 }
@@ -1186,7 +1180,6 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 	MinMax minmax = minmax_from_string(text_to_cstring(PG_GETARG_TEXT_P(3))); 
 
 
-
 	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
 
 	FhirpathItem	fp;
@@ -1205,6 +1198,129 @@ fhirpath_as_date(PG_FUNCTION_ARGS) {
 
 	if (acc.acc != 0)
 		PG_RETURN_TIMESTAMPTZ(acc.acc);
+	else
+		PG_RETURN_NULL();
+}
+
+static void
+reduce_as_sort_text(void *acc, JsonbValue *jbv) {
+	TextAccumulator *tacc = (TextAccumulator *) acc;
+    char *element_type = tacc->element_type;
+
+	if(tacc->acc != NULL){
+		/* we handle only first match */
+		return;
+	}
+
+	if(jbv->type == jbvString || jbv->type == jbvBool || jbv->type == jbvNumeric ) {
+		tacc->acc = jsonbv_to_text(NULL, jbv);
+	} else if (jbv->type == jbvBinary || jbv->type == jbvObject ){
+		JsonbValue *val = NULL;
+		StringInfoData *out;
+
+		switch(element_type[0]) {
+		case 'A' :
+			if(strcmp(element_type, "Address") == 0){
+				out = makeStringInfo();
+				appendStringInfoSpaces(out, VARHDRSZ);
+
+				val = jsonb_get_key("city", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("country", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("state", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("district", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("line", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				tacc->acc = buffer_to_text(out);
+			}
+			break;
+		case 'H' :
+			if(strcmp(element_type, "HumanName") == 0){
+				out = makeStringInfo();
+				appendStringInfoSpaces(out, VARHDRSZ);
+
+				val = jsonb_get_key("given", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("family", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				tacc->acc = buffer_to_text(out);
+			}
+			break;
+		case 'I' :
+			if(strcmp(element_type, "Identifier") == 0){
+
+			}
+			break;
+		case 'C' :
+			if(strcmp(element_type, "Coding") == 0){
+				out = makeStringInfo();
+				appendStringInfoSpaces(out, VARHDRSZ);
+
+				val = jsonb_get_key("system", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				val = jsonb_get_key("code", jbv);
+				if(val != NULL)
+					append_jsonbv_to_buffer(out, val);
+
+				tacc->acc = buffer_to_text(out);
+
+			} else if(strcmp(element_type, "CodeableConcept") == 0){
+
+			} else if(strcmp(element_type, "ContactPoint") == 0){
+
+			}
+			break;
+		}
+	}
+}
+
+
+PG_FUNCTION_INFO_V1(fhirpath_sort_as_text);
+
+Datum
+fhirpath_sort_as_text(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+
+	if(jb == NULL || fp_in == NULL ){ PG_RETURN_NULL();}
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	TextAccumulator acc;
+	acc.element_type = type;
+	acc.search_type = FPTextSort;
+	acc.acc = NULL;
+
+	reduce_fhirpath(&jbv, &fp, &acc, reduce_as_sort_text);
+
+	if (acc.acc != 0)
+		PG_RETURN_TEXT_P(acc.acc);
 	else
 		PG_RETURN_NULL();
 }
