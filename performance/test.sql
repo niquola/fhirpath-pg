@@ -135,6 +135,65 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-------------------------
+--  AS DATE MAX
+-------------------------
+create or replace function fhirpath_as_date_max() returns void as $$
+BEGIN
+	perform fhirpath_as_number(('{"b":["2017-02-15T16:34:00.' || x || '",
+																		 "2017-02-15T16:35:00.' || x || '",
+																		 "2017-02-15T16:36:00.' || x || '",
+																		 "2017-02-15T16:37:00.' || x || '"]}')::jsonb, '.d','date', 'max') as num
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP function date_arr_max(json);
+CREATE OR REPLACE FUNCTION date_arr_max(json) RETURNS date AS
+	'select max(i::date) from (select json_array_elements_text($1) as i) t'
+LANGUAGE sql IMMUTABLE;
+
+create or replace function native_as_date_max() returns void as $$
+BEGIN
+	perform date_arr_max(((('{"b":["2017-02-15T16:34:00.' || x || '",
+												 				 "2017-02-15T16:35:00.' || x || '",
+																 "2017-02-15T16:36:00.' || x || '",
+																 "2017-02-15T16:37:00.' || x || '"]}')::jsonb)#>'{b}')::json) as num
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+-------------------------
+--  AS DATE MIN
+-------------------------
+
+create or replace function fhirpath_as_date_min() returns void as $$
+BEGIN
+	perform fhirpath_as_number(('{"b":["2017-02-15T16:34:00.' || x || '",
+																		 "2017-02-15T16:35:00.' || x || '",
+																		 "2017-02-15T16:36:00.' || x || '",
+																		 "2017-02-15T16:37:00.' || x || '"]}')::jsonb, '.d','date', 'min') as num
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP function date_arr_min(json);
+CREATE OR REPLACE FUNCTION date_arr_min(json) RETURNS date AS
+	'select min(i::date) from (select json_array_elements_text($1) as i) t'
+LANGUAGE sql IMMUTABLE;
+
+create or replace function native_as_date_min() returns void as $$
+BEGIN
+	perform date_arr_min(((('{"b":["2017-02-15T16:34:00.' || x || '",
+												 				 "2017-02-15T16:35:00.' || x || '",
+																 "2017-02-15T16:36:00.' || x || '",
+																 "2017-02-15T16:37:00.' || x || '"]}')::jsonb)#>'{b}')::json) as num
+	from generate_series(1, 100000) x;
+END;
+$$ LANGUAGE plpgsql;
+----------------------------------------------------------------------
+
 select
 	  r.method
 	, r.fhirpath
@@ -147,11 +206,21 @@ from (
 		,	eval_time('select fhirpath_'||f.f||'()') fhirpath
 		, eval_time('select native_'||f.f||'()') native
 	from (
-		select unnest(array['as_number_1', 'as_number_2', 'as_date_1', 'as_date_2','as_number_min', 'as_number_max']) as f
+		select unnest(array['as_number_1', 'as_number_2',
+												'as_date_1', 'as_date_2',
+												'as_number_min', 'as_number_max',
+												'as_date_min', 'as_date_max']) as f
 	) f
 ) as r
 
 order by "ratio fhirpath/native" desc;
 
 
+---}}}
+
+
+---{{{
+
+\c postgres
+select native_as_date();
 ---}}}
