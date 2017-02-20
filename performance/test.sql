@@ -178,10 +178,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP function date_arr_min(json);
-CREATE OR REPLACE FUNCTION date_arr_min(json) RETURNS date AS
-	'select min(i::date) from (select json_array_elements_text($1) as i) t'
-LANGUAGE sql IMMUTABLE;
+-- DROP function date_arr_min(json);
+-- CREATE OR REPLACE FUNCTION date_arr_min(json) RETURNS date AS
+	-- 'select min(i::date) from (select json_array_elements_text($1) as i) t'
+-- LANGUAGE sql IMMUTABLE;
 
 create or replace function native_as_date_min() returns void as $$
 BEGIN
@@ -263,6 +263,12 @@ order by "ratio fhirpath/native" desc;
 ---{{{
 \c postgres
 \timing
+
+
+SELECT fhirpath_date_bound('2005-08-09',  'min');
+SELECT fhirpath_date_bound('2005-08-09',  'max');
+
+select DATERANGE('2005-08-09', '2005-08-10');
 
 
 ---}}}
