@@ -6,8 +6,6 @@
 ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sq
 ```
 
-P
-
 
 ## Search Parameter Types
 
