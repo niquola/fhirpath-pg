@@ -12,7 +12,7 @@ P
 ## Search Parameter Types
 
 | Data Type        | number   | date     | string   | token    | reference | quantity | uri      |
-| -                |          |          |          |          |           |          |          |
+|---|---|---|---|---|---|---|---|
 | __Primitive__    | -------- | -------- | -------- | -------- | --------  | -------- | -------- |
 | boolean          |          |          |          | Y        |           |          |          |
 | code             |          |          |          | Y        |           |          |          |
@@ -55,7 +55,7 @@ P
 | __Other__        | -------- | -------- | -------- | -------- | --------  | -------- | -------- |
 | Reference        |          |          |          |          | Y         |          |          |
 | Narrative        |          |          |          |          |           |          |          |
-| Extension        |          |          |          |          |           |          |          ||
+| Extension        |          |          |          |          |           |          |          |
 
 
 
