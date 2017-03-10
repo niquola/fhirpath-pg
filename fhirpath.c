@@ -270,7 +270,6 @@ append_jsonbv_to_buffer(StringInfoData *out, JsonbValue *v){
 		break;
     case jbvString:
 		appendBinaryStringInfo(out, v->val.string.val, v->val.string.len);
-		/* appendStringInfoString(out, pnstrdup(v->val.string.val, v->val.string.len)); */
 		break;
     case jbvNumeric:
 		appendStringInfoString(out, DatumGetCString(DirectFunctionCall1(numeric_out, PointerGetDatum(v->val.numeric))));
@@ -417,7 +416,6 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 				char *poly_type;
 				next_v = jsonb_get_prefix(key, jbv, &poly_type);
 				if(next_v != NULL){
-					/* elog(INFO, "!!!el type %s, type %s, %s", bacc->element_type, poly_type, jsonbv_to_string(NULL, next_v)); */
 					bacc->element_type = poly_type;
 				}
 			}
@@ -922,28 +920,27 @@ update_numeric(NumericAccumulator *nacc, Numeric num){
 }
 
 void reduce_as_number(void *acc, JsonbValue *val){
+
 	NumericAccumulator *nacc = acc;
 
 	/* elog(INFO, "extract as number [%s] %s", nacc->element_type, jsonbv_to_string(NULL, val)); */
 
-	if ( strcmp(nacc->element_type, "decimal") == 0 ||
-		 strcmp(nacc->element_type, "integer") == 0 ||
-		 strcmp(nacc->element_type, "positiveInt") == 0 ||
-		 strcmp(nacc->element_type, "unsignedInt") == 0 ) {
+	if( val == NULL ) {return;}
 
-		if(val != NULL && val->type == jbvNumeric){
-			update_numeric(nacc, val->val.numeric);
-		}
+	if( val->type == jbvNumeric){
 
-	} else if (
-		strcmp(nacc->element_type, "Duration") == 0 ||
-		strcmp(nacc->element_type, "Quantity") == 0 ||
-		strcmp(nacc->element_type, "Age") == 0 ||
-		strcmp(nacc->element_type, "Count") == 0 ||
-		strcmp(nacc->element_type, "Money") == 0 ||
-		strcmp(nacc->element_type, "Distance") == 0 ||
-		strcmp(nacc->element_type, "SimpleQuantity") == 0
-	) {
+		update_numeric(nacc, val->val.numeric);
+
+	} else if( val->type == jbvString){
+
+		long len =val->val.string.len;
+	    char *num_str = palloc( len+ 1);
+		memcpy(num_str, val->val.string.val, len);
+		num_str[len] = '\0';
+
+		update_numeric(nacc, DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(num_str), 0, -1)));
+
+	} else if ( val->type == jbvBinary ) {
 
 		JsonbValue *value = jsonb_get_key("value", val); 
 

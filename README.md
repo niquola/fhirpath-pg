@@ -168,5 +168,30 @@ typedef struct
 #define JB_ROOT_IS_OBJECT(jbp_) ( *(uint32*) VARDATA(jbp_) & JB_FOBJECT)
 #define JB_ROOT_IS_ARRAY(jbp_)	( *(uint32*) VARDATA(jbp_) & JB_FARRAY)
   
-
 ```
+
+
+## HL7v2 binary datatype
+
+len
+msh:.......
+segments index
+segments....
+
+MSH|ADT,08|....
+PID|xxx|....
+
+* small & searchable bla, bla
+* select insert
+
+
+select 
+  m->'pid.5'
+where
+  m->'pid.8' > '1980'::date
+
+
+
+### UCUM impl
+
+'number|units' -> 'units'

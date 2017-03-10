@@ -23,11 +23,7 @@ SELECT fhirpath_as_number('{"a":{"b": {"c": 5}}}', '.a.b.c', 'unsignedInt', 'min
 (1 row)
 
 SELECT fhirpath_as_number('{"a":{"b": {"c": "ups"}}}', '.a.b.c', 'decimal', 'min');
- fhirpath_as_number 
---------------------
-                   
-(1 row)
-
+ERROR:  invalid input syntax for type numeric: "ups"
 SELECT fhirpath_as_number('{"a":{"b": {"value": 5.1}}}', '.a.b', 'Age', 'min') + 0.05;
  ?column? 
 ----------

@@ -7,3 +7,9 @@ SELECT fhirpath_as_number('{"a":{"where": {"value": 1}}}', '.a.where.value', 'in
 SELECT fhirpath_as_number('{"a":{"where": [{"code": "code", "value": 42}]}}', '.a.where.where(code=code).value', 'integer', 'max') + 0.1;
 SELECT fhirpath_as_number('{"a":{"where": [{"code": "where", "value": 42}]}}', '.a.where.where(code=where).value', 'integer', 'max') + 0.1;
 SELECT fhirpath_as_number('{"a":{"where": [{"where": "where", "value": 42}]}}', '.a.where.where(where=where).value', 'integer', 'max') + 0.1;
+
+
+SELECT fhirpath_as_date('{"a": {"b": {"c": "?"}}}', '.a.b.c', 'Polymorphic', 'max');
+SELECT fhirpath_as_number('{"a": {"b": {"c": "?"}}}', '.a.b.c', 'Polymorphic', 'max');
+SELECT fhirpath_as_number('{"a": {"b": {"c": "5"}}}', '.a.b.c', 'Polymorphic', 'max');
+SELECT fhirpath_as_number('{"a": {"b": {"c": "5.2"}}}', '.a.b.c', 'Polymorphic', 'max');
