@@ -6,13 +6,11 @@
 ./test.sh > test.sql && psql -v ON_ERROR_STOP=1 root < test.sq
 ```
 
-P
-
 
 ## Search Parameter Types
 
 | Data Type        | number   | date     | string   | token    | reference | quantity | uri      |
-| -                |          |          |          |          |           |          |          |
+|---|---|---|---|---|---|---|---|
 | __Primitive__    | -------- | -------- | -------- | -------- | --------  | -------- | -------- |
 | boolean          |          |          |          | Y        |           |          |          |
 | code             |          |          |          | Y        |           |          |          |
@@ -55,7 +53,7 @@ P
 | __Other__        | -------- | -------- | -------- | -------- | --------  | -------- | -------- |
 | Reference        |          |          |          |          | Y         |          |          |
 | Narrative        |          |          |          |          |           |          |          |
-| Extension        |          |          |          |          |           |          |          ||
+| Extension        |          |          |          |          |           |          |          |
 
 
 
