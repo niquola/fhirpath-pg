@@ -1371,6 +1371,10 @@ fhirpath_sort_as_text(PG_FUNCTION_ARGS) {
 
 void reduce_as_exists(void *acc, JsonbValue *val){
 	BoolAccumulator *bacc = (BoolAccumulator *) acc;
+
+	TextAccumulator *tacc = (TextAccumulator *) acc;
+    char *element_type = tacc->element_type;
+  if (strcmp(element_type, "Polymorphic") == 0) return;
 	bacc->acc = true;
 }
 
