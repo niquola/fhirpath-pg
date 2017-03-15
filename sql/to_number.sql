@@ -24,3 +24,5 @@ SELECT fhirpath_as_number('{"a":{"b": [{"value": 7.1},{"value": 6.1}]}}', '.a.b'
 SELECT fhirpath_as_number('{"a":[7.1, 6.1, 100, 1.1]}', '.a', 'decimal', 'max') + 0.05;
 SELECT fhirpath_as_number('{"a":[7.1, 6.1, 100, 1.1]}', '.a', 'decimal', 'min') + 0.05;
 
+SELECT fhirpath_as_number('{"activity": {"detail": {"scheduledInteger": 10}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') + 0.5;
+SELECT fhirpath_as_number('{"activity": {"detail": {"scheduled": 10}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') is null;

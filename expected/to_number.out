@@ -120,3 +120,15 @@ SELECT fhirpath_as_number('{"a":[7.1, 6.1, 100, 1.1]}', '.a', 'decimal', 'min') 
      1.15
 (1 row)
 
+SELECT fhirpath_as_number('{"activity": {"detail": {"scheduledInteger": 10}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') + 0.5;
+ ?column? 
+----------
+     10.5
+(1 row)
+
+SELECT fhirpath_as_number('{"activity": {"detail": {"scheduled": 10}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') is null;
+ ?column? 
+----------
+ f
+(1 row)
+
