@@ -2071,7 +2071,8 @@ static keyword keywords[] = {
 	{ 4, true,	NULL_P,		"null"},
 	{ 4, true,	TRUE_P,		"true"},
 	{ 5, true,	FALSE_P,	"false"},
-	{ 5, false,	WHERE_P,	"where"}
+	{ 5, false,	WHERE_P,	"where"},
+	{ 6, false,	EXISTS_P,	"exists"}
 };
 
 static int

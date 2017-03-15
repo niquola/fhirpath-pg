@@ -33,6 +33,7 @@ static void reduce_as_number(void *acc, JsonbValue *val);
 static text *get_text_key(JsonbValue *val, char *key);
 static void reduce_as_token(void *acc, JsonbValue *val);
 static void reduce_as_date(void *acc, JsonbValue *val);
+static void reduce_as_exists(void *acc, JsonbValue *val);
 
 static void reduce_jsonb_as_strings(JsonbValue *jbv, void *acc, reduce_fn fn);
 
@@ -40,7 +41,7 @@ typedef enum MinMax {min, max} MinMax;
 
 static MinMax minmax_from_string(char *s);
 
-typedef enum FPSearchType {FPToken, FPString, FPDate, FPNumeric, FPReference, FPTextSort} FPSearchType;  
+typedef enum FPSearchType {FPToken, FPString, FPDate, FPNumeric, FPReference, FPTextSort, FPBool} FPSearchType;  
 
 static Datum date_bound(char *date_str, long str_len,  MinMax minmax);
 
@@ -81,6 +82,12 @@ typedef struct TextAccumulator {
 	FPSearchType search_type;
 	text *acc;
 } TextAccumulator;
+
+typedef struct BoolAccumulator {
+	char	*element_type;
+	FPSearchType search_type;
+	bool acc;
+} BoolAccumulator;
 
 static void update_numeric(NumericAccumulator *nacc, Numeric num);
 /* static char * numeric_to_cstring(Numeric n); */
@@ -407,16 +414,21 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 		break;
 	case fpKey:
 		key = fpGetString(path_item, NULL);
+		/* elog(INFO, "next key %s", key); */
 		next_v = jsonb_get_key(key, jbv);
 
 		/* handle polymorphics */
-		if(next_v == NULL && path_item->nextPos == 0){
-			BasicAccumulator *bacc = (BasicAccumulator *)acc;
-			if(strcmp(bacc->element_type, "Polymorphic") == 0) {
-				char *poly_type;
-				next_v = jsonb_get_prefix(key, jbv, &poly_type);
-				if(next_v != NULL){
-					bacc->element_type = poly_type;
+		if(next_v == NULL) {
+			bool hasNextItem = fpGetNext(path_item, &next_item);
+
+			if(!hasNextItem || next_item.type == fpExists) {
+				BasicAccumulator *bacc = (BasicAccumulator *)acc;
+				if(strcmp(bacc->element_type, "Polymorphic") == 0) {
+					char *poly_type;
+					next_v = jsonb_get_prefix(key, jbv, &poly_type);
+					if(next_v != NULL){
+						bacc->element_type = poly_type;
+					}
 				}
 			}
 		}
@@ -453,14 +465,22 @@ reduce_fhirpath(JsonbValue *jbv, FhirpathItem *path_item, void *acc, reduce_fn f
 					}
 				}
 			} else if (next_v != NULL ){
-				fn(acc, next_v);
-				num_results += 1;
+				if(fpGetNext(path_item, &next_item)) {
+					num_results += reduce_fhirpath(next_v, &next_item, acc, fn);
+				} else {
+					fn(acc, next_v);
+					num_results += 1;
+				}
 			}
 
 		}
 		break;
 	case fpValues:
 		elog(INFO, "Not impl");
+		break;
+	case fpExists:
+		fn(acc, next_v);
+		num_results += 1;
 		break;
 	default:
 		elog(INFO, "TODO extract");
@@ -1344,4 +1364,34 @@ fhirpath_sort_as_text(PG_FUNCTION_ARGS) {
 		PG_RETURN_TEXT_P(acc.acc);
 	else
 		PG_RETURN_NULL();
+}
+
+void reduce_as_exists(void *acc, JsonbValue *val){
+	BoolAccumulator *bacc = (BoolAccumulator *) acc;
+	bacc->acc = true;
+}
+
+PG_FUNCTION_INFO_V1(fhirpath_exists);
+
+Datum
+fhirpath_exists(PG_FUNCTION_ARGS) {
+
+	Jsonb      *jb = PG_GETARG_JSONB(0);
+	Fhirpath   *fp_in = PG_GETARG_FHIRPATH(1);
+	char       *type = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+	FhirpathItem	fp;
+	fpInit(&fp, fp_in);
+
+	JsonbValue	jbv;
+	initJsonbValue(&jbv, jb);
+
+	BoolAccumulator acc;
+	acc.element_type = type;
+	acc.search_type = FPBool;
+	acc.acc = false;
+
+	reduce_fhirpath(&jbv, &fp, &acc, reduce_as_exists);
+
+	PG_RETURN_BOOL(acc.acc);
 }

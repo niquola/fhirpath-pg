@@ -48,13 +48,14 @@
      STRING_T = 264,
      BOOLEAN_T = 265,
      PIPE_P = 266,
-     STRING_P = 267,
-     NUMERIC_P = 268,
-     OR_P = 269,
-     AND_P = 270,
-     NOT_P = 271,
-     IS_P = 272,
-     IN_P = 273
+     EXISTS_P = 267,
+     STRING_P = 268,
+     NUMERIC_P = 269,
+     OR_P = 270,
+     AND_P = 271,
+     NOT_P = 272,
+     IS_P = 273,
+     IN_P = 274
    };
 #endif
 /* Tokens.  */
@@ -67,20 +68,21 @@
 #define STRING_T 264
 #define BOOLEAN_T 265
 #define PIPE_P 266
-#define STRING_P 267
-#define NUMERIC_P 268
-#define OR_P 269
-#define AND_P 270
-#define NOT_P 271
-#define IS_P 272
-#define IN_P 273
+#define EXISTS_P 267
+#define STRING_P 268
+#define NUMERIC_P 269
+#define OR_P 270
+#define AND_P 271
+#define NOT_P 272
+#define IS_P 273
+#define IN_P 274
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 162 "fhirpath_gram.y"
+#line 169 "fhirpath_gram.y"
 {
 	string 				str;
 	List				*elems; /* list of FhirpathParseItem */
@@ -88,7 +90,7 @@ typedef union YYSTYPE
 	FhirpathParseItem	*value;
 }
 /* Line 1529 of yacc.c.  */
-#line 92 "fhirpath_gram.h"
+#line 94 "fhirpath_gram.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

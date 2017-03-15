@@ -148,6 +148,13 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 	 return v;
  }
 
+ static FhirpathParseItem*
+	 makeExistsOp()
+ {
+	 FhirpathParseItem *v = makeItemType(fpExists);
+	 return v;
+ }
+
 
 %}
 
@@ -168,7 +175,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 
 %token	<str>		WHERE_P NULL_P TRUE_P
 					FALSE_P NUMERIC_T OBJECT_T
-					STRING_T BOOLEAN_T PIPE_P
+					STRING_T BOOLEAN_T PIPE_P EXISTS_P
 
 %token	<str>		STRING_P NUMERIC_P
 
@@ -182,7 +189,7 @@ void fhirpath_yyerror(FhirpathParseItem **result, const char *message);
 %left OR_P 
 %left AND_P 
 %right NOT_P 
-%nonassoc IN_P IS_P WHERE_P
+%nonassoc IN_P IS_P WHERE_P EXISTS_P
 %nonassoc '(' ')'
 
 /* Grammar follows */
@@ -217,6 +224,7 @@ string_key:
 path:
 	'.' key							{ $$ = lappend(NIL, $2); }
     | string_key '.' key   			{ $$ = lappend(lappend(NIL, makeResourceType(&$1)), $3); }
+    | path '.' EXISTS_P '(' ')'     { $$ = lappend($1, makeExistsOp()); } 
 	| path '.' key   				{ $$ = lappend($1, $3); }
 	;
 

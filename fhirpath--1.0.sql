@@ -60,3 +60,8 @@ CREATE OR REPLACE FUNCTION fhirpath_sort_as_text(jsonb, fhirpath, text)
 RETURNS text
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION fhirpath_exists(jsonb, fhirpath, text)
+RETURNS boolean
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT IMMUTABLE;

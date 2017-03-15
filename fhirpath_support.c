@@ -30,8 +30,8 @@ int
 serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 {
 	int32	pos = buf->len - VARHDRSZ; /* position from begining of fhirpath data */
-	int32	next = 0;
-	int32	chld;
+ 	int32	next = 0;
+ 	int32	chld;
 
 	/* we recursive check stack */
 	check_stack_depth();
@@ -66,6 +66,8 @@ serializeFhirpathParseItem(StringInfo buf, FhirpathParseItem *item)
 		*(int32*)(buf->data + right) = chld;
 	}
 	break;
+	case fpExists:
+		break;
 	case fpValues:
 		break;
 	case fpKey:
@@ -133,6 +135,8 @@ fpInitByBuffer(FhirpathItem *v, char *base, int32 pos)
 	switch(v->type)
 	{
 	case fpNull:
+		break;
+	case fpExists:
 		break;
 	case fpValues:
 		break;
@@ -271,6 +275,9 @@ printFhirpathItem(StringInfo buf, FhirpathItem *v, bool inKey)
 		appendStringInfoString(buf, " | ");
 		fpGetRightArg(v, &elem);
 		printFhirpathItem(buf, &elem, false);
+		break;
+	case fpExists:
+		appendStringInfoString(buf, ".exists()");
 		break;
 	case fpOr:
 		fpGetLeftArg(v, &elem);
