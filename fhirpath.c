@@ -285,7 +285,8 @@ append_jsonbv_to_buffer(StringInfoData *out, JsonbValue *v){
     case jbvArray:
     case jbvObject:
 	{
-        (void) JsonbToCString(out, v->val.binary.data, -1);
+		Jsonb *binary = JsonbValueToJsonb(v);
+        (void) JsonbToCString(out, &binary->root, -1);
 	}
 	break;
     default:
@@ -298,6 +299,8 @@ append_jsonbv_to_buffer(StringInfoData *out, JsonbValue *v){
 /* StringInfoData out buffer is optional */
 static inline char *
 jsonbv_to_string(StringInfoData *out, JsonbValue *v){
+	if (out == NULL)
+		out = makeStringInfo();
 	append_jsonbv_to_buffer(out, v);
 	return out->data;
 }

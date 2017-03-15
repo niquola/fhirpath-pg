@@ -629,3 +629,16 @@ select fhirpath_as_date('{"arr": [
  Fri Dec 31 23:59:59.999999 1993 UTC
 (1 row)
 
+SELECT fhirpath_as_date('{"activity": {"detail": {"scheduledTiming": {"event": ["2017-02-12T00:00:00.000Z"]}}}}', '.activity.detail.scheduled', 'Polymorphic', 'max');
+          fhirpath_as_date           
+-------------------------------------
+ Sun Feb 12 00:00:00.999999 2017 UTC
+(1 row)
+
+SELECT fhirpath_as_date('{"activity": {"detail": {"scheduled": {"event": ["2017-02-12T00:00:00.000Z"]}}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') is null;
+WARNING:  I do not know how to get datetime from {"event": ["2017-02-12T00:00:00.000Z"]}
+ ?column? 
+----------
+ t
+(1 row)
+

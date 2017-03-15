@@ -189,4 +189,5 @@ select fhirpath_as_date('{"arr": [
 {"code":"code_2", "performedPeriod": {"start": "1991-01-01", "end": "1991-12-31"}}
 ]}', '.arr.where(code=code_1).performed', 'Polymorphic', 'max');
 
-SELECT fhirpath_as_date('{"activity": {"detail": {"scheduled": {"event": ["2017-02-12T00:00:00.000Z"]}}}}', '.activity.detail.scheduled', 'Polymorphic', 'max');
+SELECT fhirpath_as_date('{"activity": {"detail": {"scheduledTiming": {"event": ["2017-02-12T00:00:00.000Z"]}}}}', '.activity.detail.scheduled', 'Polymorphic', 'max');
+SELECT fhirpath_as_date('{"activity": {"detail": {"scheduled": {"event": ["2017-02-12T00:00:00.000Z"]}}}}', '.activity.detail.scheduled', 'Polymorphic', 'max') is null;
