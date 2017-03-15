@@ -76,3 +76,9 @@ SELECT fhirpath_exists('{"a":{"bDate": {"c": 5.3}}}', '.a.b.c.exists()', 'Polymo
  f
 (1 row)
 
+SELECT fhirpath_exists('{"a":{"b": {"c": 5.3}}}', '.a.b.exists()', 'Polymorphic'); 
+ fhirpath_exists 
+-----------------
+ f
+(1 row)
+
