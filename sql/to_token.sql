@@ -84,3 +84,9 @@ SELECT fhirpath_as_token('{"b": {"propCodeableConcept": {"coding": [{"code": "CC
 SELECT fhirpath_as_token('{"a": {"propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
 SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "CC", "system": "SYS"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
 SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding": [{"code": "C1", "system": "SYS2"},{"code": "C2", "system": "SYS2"}]}}}', '.a.prop', 'Polymorphic') from as_token_test;
+
+
+
+
+SELECT fhirpath_as_token('{"a": {"use": "someUse", "value": "someValue"}}', '.a', 'ContactPoint');
+

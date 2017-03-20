@@ -58,9 +58,9 @@ SELECT fhirpath_as_token(resource, '.identifier', 'Identifier') from as_token_te
 (1 row)
 
 SELECT fhirpath_as_token(resource, '.telecom', 'ContactPoint') from as_token_test;
-                                   fhirpath_as_token                                   
----------------------------------------------------------------------------------------
- {"(03) 5555 6473",phone,"phone|(03) 5555 6473",ivan@mail.ru,email,email|ivan@mail.ru}
+                                 fhirpath_as_token                                 
+-----------------------------------------------------------------------------------
+ {"(03) 5555 6473",work,"work|(03) 5555 6473",ivan@mail.ru,home,home|ivan@mail.ru}
 (1 row)
 
 SELECT fhirpath_as_token(resource, '.telecom.value', 'string') from as_token_test;
@@ -148,21 +148,21 @@ SELECT fhirpath_as_token('{"a": {"value": 1234}}', '.a', 'Identifier') from as_t
 (1 row)
 
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use='work')$FP$, 'ContactPoint') from as_token_test;
-                fhirpath_as_token                
--------------------------------------------------
- {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+               fhirpath_as_token               
+-----------------------------------------------
+ {"(03) 5555 6473",work,"work|(03) 5555 6473"}
 (1 row)
 
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use=work)$FP$, 'ContactPoint') from as_token_test;
-                fhirpath_as_token                
--------------------------------------------------
- {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+               fhirpath_as_token               
+-----------------------------------------------
+ {"(03) 5555 6473",work,"work|(03) 5555 6473"}
 (1 row)
 
 SELECT fhirpath_as_token(resource, $FP$.telecom.where(use="work")$FP$, 'ContactPoint') from as_token_test;
-                fhirpath_as_token                
--------------------------------------------------
- {"(03) 5555 6473",phone,"phone|(03) 5555 6473"}
+               fhirpath_as_token               
+-----------------------------------------------
+ {"(03) 5555 6473",work,"work|(03) 5555 6473"}
 (1 row)
 
 -- test lowering
@@ -207,5 +207,11 @@ SELECT fhirpath_as_token('{"a": {"x": 1, "y": 2, "propCodeableConcept": {"coding
          fhirpath_as_token         
 -----------------------------------
  {c1,sys2,sys2|c1,c2,sys2,sys2|c2}
+(1 row)
+
+SELECT fhirpath_as_token('{"a": {"use": "someUse", "value": "someValue"}}', '.a', 'ContactPoint');
+           fhirpath_as_token           
+---------------------------------------
+ {somevalue,someuse,someuse|somevalue}
 (1 row)
 

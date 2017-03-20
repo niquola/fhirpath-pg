@@ -747,8 +747,7 @@ void reduce_as_token(void *acc, JsonbValue *val){
 
 	/* elog(INFO, "reduce token [%s] %s",tacc->element_type, jsonbv_to_string(NULL, val)); */
 
-	if(strcmp(tacc->element_type, "Identifier") == 0 ||
-	   strcmp(tacc->element_type, "ContactPoint") == 0 ){
+	if(strcmp(tacc->element_type, "Identifier") == 0 ){
 
 		text *value = get_text_key(val, "value");
 		append_token(tacc,  value);
@@ -757,7 +756,15 @@ void reduce_as_token(void *acc, JsonbValue *val){
 
 		append_token_pair(tacc, system, value);
 
-	} else if (strcmp(tacc->element_type, "code") == 0 || strcmp(tacc->element_type, "string") == 0 || strcmp(tacc->element_type, "uri") == 0) {
+	}  else if (strcmp(tacc->element_type, "ContactPoint") == 0)  {
+		text *value = get_text_key(val, "value");
+		append_token(tacc,  value);
+		text *system = get_text_key(val, "use");
+		append_token(tacc,  system);
+
+		append_token_pair(tacc, system, value);
+
+  } else if (strcmp(tacc->element_type, "code") == 0 || strcmp(tacc->element_type, "string") == 0 || strcmp(tacc->element_type, "uri") == 0) {
 
 		append_token(tacc, jsonb_string_as_text(val));
 
