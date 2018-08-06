@@ -9,3 +9,8 @@ results
 .#*
 TAGS
 fhirpath_gram.c
+
+/parser/fhirpath
+/parser/fhirpath.lex.c
+/parser/fhirpath.tab.c
+/parser/fhirpath.tab.h
